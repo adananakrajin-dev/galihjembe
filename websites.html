@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SESSIONS | Website Catalog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { 
+            background-color: #09090b; 
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 30%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 30%),
+                radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.1), transparent 40%);
+            background-attachment: fixed;
+            color: #fff; 
+            overflow-x: hidden; 
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 4%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(9, 9, 11, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            animation: fadeDown 0.8s ease both;
+        }
+        .nav-brand {
+            font-size: 18px; font-weight: 700; color: #fff;
+            letter-spacing: 3px; cursor: pointer; text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+        .nav-brand:hover { opacity: 0.7; }
+        .nav-center { display: flex; gap: 32px; }
+        .nav-center a {
+            color: rgba(255,255,255,0.6); text-decoration: none;
+            font-size: 14px; font-weight: 500; transition: all 0.3s ease;
+        }
+        .nav-center a:hover { color: #fff; }
+
+        .page-header {
+            text-align: center; padding: 80px 20px 50px;
+            animation: fadeUp 0.8s ease 0.1s both;
+        }
+        .page-header .eyebrow {
+            display: inline-block; padding: 6px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px; font-size: 11px; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: rgba(255,255,255,0.8); margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .page-header h1 {
+            font-size: 46px; font-weight: 700; letter-spacing: -1px;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+        .page-header p {
+            font-size: 16px; color: rgba(255,255,255,0.5);
+            max-width: 540px; margin: 0 auto; line-height: 1.7;
+        }
+
+        .container { max-width: 1240px; margin: 0 auto; padding: 0 24px 80px; }
+
+        .filter-container {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 20px; margin-bottom: 40px;
+            animation: fadeUp 0.8s ease 0.2s both;
+        }
+        .tabs-wrapper {
+            flex: 1; overflow-x: auto;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .tabs-wrapper::-webkit-scrollbar { display: none; }
+        .tabs {
+            display: inline-flex; background: rgba(255,255,255,0.03);
+            padding: 6px; border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px); gap: 4px;
+        }
+        .tab {
+            padding: 10px 24px; background: transparent; border: none;
+            border-radius: 50px; font-size: 13px; font-weight: 500;
+            cursor: pointer; color: rgba(255,255,255,0.5);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap;
+        }
+        .tab:hover { color: #fff; }
+        .tab.active {
+            background: rgba(255,255,255,0.1); color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .search-wrap { position: relative; flex-shrink: 0; }
+        .search-wrap i {
+            position: absolute; left: 18px; top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.4); font-size: 13px;
+        }
+        #searchInput {
+            width: 280px; padding: 12px 20px 12px 46px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 50px; color: #fff; font-size: 13px;
+            outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(10px);
+        }
+        #searchInput:focus {
+            border-color: rgba(255,255,255,0.3); background: rgba(0,0,0,0.4);
+            box-shadow: 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        .web-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 28px;
+        }
+
+        .web-card {
+            background: rgba(255,255,255,0.02); border-radius: 24px;
+            padding: 12px; border: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer; display: flex; flex-direction: column;
+            gap: 16px; animation: popIn 0.5s ease both;
+            backdrop-filter: blur(10px);
+        }
+        .web-card:hover {
+            transform: translateY(-8px); border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.04);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.02);
+        }
+
+        .web-preview {
+            width: 100%; height: 220px; background-size: cover;
+            background-position: top center; border-radius: 16px;
+            position: relative; overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+        }
+        .cat-tag {
+            position: absolute; top: 12px; left: 12px;
+            padding: 6px 12px; background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px); border-radius: 30px;
+            font-size: 11px; font-weight: 600; color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .price-badge {
+            position: absolute; top: 12px; right: 12px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #fff, #e4e4e7);
+            border-radius: 30px; font-size: 12px; font-weight: 700;
+            color: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .web-info {
+            padding: 0 8px 8px; flex: 1;
+            display: flex; flex-direction: column;
+        }
+        .web-info h3 {
+            font-size: 18px; font-weight: 600; color: #fff;
+            margin-bottom: 6px; letter-spacing: -0.2px;
+        }
+        .web-info p {
+            font-size: 13px; color: rgba(255,255,255,0.5);
+            line-height: 1.6; flex: 1;
+        }
+
+        .feature-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; }
+        .pill {
+            padding: 4px 12px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;
+            font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 500;
+        }
+
+        .btn-order {
+            margin-top: auto; width: 100%; padding: 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; color: #fff;
+            font-size: 13px; font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .web-card:hover .btn-order {
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+        }
+
+        .empty-state {
+            display: none; text-align: center; padding: 100px 20px;
+            color: rgba(255,255,255,0.4);
+        }
+        .empty-state i { font-size: 48px; margin-bottom: 20px; opacity: 0.5; }
+        .empty-state p { font-size: 15px; }
+
+        footer {
+            text-align: center; padding: 40px;
+            color: rgba(255,255,255,0.3); font-size: 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeUp   { from { opacity:0; transform:translateY(30px);  } to { opacity:1; transform:translateY(0); } }
+        @keyframes popIn    { from { opacity:0; transform:scale(0.95) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+
+        .web-card:nth-child(1) { animation-delay: 0.1s; }
+        .web-card:nth-child(2) { animation-delay: 0.2s; }
+        .web-card:nth-child(3) { animation-delay: 0.3s; }
+        .web-card:nth-child(4) { animation-delay: 0.4s; }
+        .web-card:nth-child(5) { animation-delay: 0.5s; }
+        .web-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @media (max-width: 768px) {
+            .nav-center { display: none; }
+            nav { padding: 20px 5%; }
+            .page-header { padding: 60px 16px 40px; }
+            .page-header h1 { font-size: 34px; }
+            .filter-container { flex-direction: column; align-items: stretch; gap: 16px; }
+            .tabs-wrapper { width: 100%; }
+            .tab { padding: 8px 20px; font-size: 12px; }
+            .search-wrap { width: 100%; }
+            #searchInput { width: 100%; }
+            .web-grid { grid-template-columns: 1fr; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="dashboard.php" class="nav-brand">SESSIONS</a>
+    <div class="nav-center"></div>
+</nav>
+
+<div class="page-header">
+    <div class="eyebrow">Catalog</div>
+    <h1 id="pageTitle">Our Websites</h1>
+    <p id="pageDesc">Pilih website yang ingin dipakai untuk bisnis Anda. Desain modern, cepat, dan siap dikustomisasi kapan saja.</p>
+</div>
+
+<div class="container">
+    <div class="filter-container">
+        <div class="tabs-wrapper">
+            <div class="tabs">
+                <button class="tab active" onclick="filterWeb('all', this)">All</button>
+                <button class="tab" onclick="filterWeb('ecommerce', this)">E-Commerce</button>
+                <button class="tab" onclick="filterWeb('company', this)">Company Profile</button>
+                <button class="tab" onclick="filterWeb('webletter', this)">Web Letter</button>
+                <button class="tab" onclick="filterWeb('landing', this)">Landing Page</button>
+            </div>
+        </div>
+        <div class="search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Cari nama atau kategori...">
+        </div>
+    </div>
+
+    <div class="web-grid" id="webContainer">
+
+        <div class="web-card ecommerce" onclick="openOrder('ShopNest Fashion', 200000)">
+            <div class="web-preview" style="background-image: url('https://images.unsplash.com/photo-1523381294911-8d3cead13475?auto=format&fit=crop&w=800&q=80');">
+                <span class="cat-tag">E-Commerce</span>
+                <span class="price-badge">Rp 200K</span>
+            </div>
+            <div class="web-info">
+                <h3>ShopNest Fashion</h3>
+                <p>Toko online modern dasar dengan sistem keranjang belanja yang terintegrasi langsung dengan WhatsApp.</p>
+                <div class="feature-pills">
+                    <span class="pill">WA Checkout</span>
+                    <span class="pill">Katalog Produk</span>
+                </div>
+                <div class="btn-order"><i class="fa-solid fa-cart-shopping"></i> Pesan Sekarang</div>
+            </div>
+        </div>
+
+        <div class="web-card ecommerce" onclick="openOrder('TechZone Electronics', 350000)">
+            <div class="web-preview" style="background-image: url('https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80');">
+                <span class="cat-tag">E-Commerce +</span>
+                <span class="price-badge">Rp 350K</span>
+            </div>
+            <div class="web-info">
+                <h3>TechZone Electronics</h3>
+                <p>Desain toko gadget premium lengkap dengan tabel spesifikasi produk dan fitur dark mode elegan.</p>
+                <div class="feature-pills">
+                    <span class="pill">Dark Mode</span>
+                    <span class="pill">Tabel Spesifikasi</span>
+                </div>
+                <div class="btn-order"><i class="fa-solid fa-cart-shopping"></i> Pesan Sekarang</div>
+            </div>
+        </div>
+
+        <div class="web-card company" onclick="openOrder('NovaCorp Corporate', 150000)">
+            <div class="web-preview" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80');">
+                <span class="cat-tag">Company</span>
+                <span class="price-badge">Rp 150K</span>
+            </div>
+            <div class="web-info">
+                <h3>NovaCorp Corporate</h3>
+                <p>Profil perusahaan profesional dengan animasi transisi yang smooth untuk menaikkan trust klien.</p>
+                <div class="feature-pills">
+                    <span class="pill">Smooth Scroll</span>
+                    <span class="pill">Form Kontak</span>
+                </div>
+                <div class="btn-order"><i class="fa-solid fa-building"></i> Pesan Sekarang</div>
+            </div>
+        </div>
+
+        <div class="web-card webletter" onclick="openOrder('InkWave Web Letter', 50000)">
+            <div class="web-preview" style="background-image: url('https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80');">
+                <span class="cat-tag">Web Letter</span>
+                <span class="price-badge">Rp 20-50K</span>
+            </div>
+            <div class="web-info">
+                <h3>InkWave Web Letter</h3>
+                <p>Desain elegan khusus publikasi digital, surat penawaran eksklusif, atau newsletter premium.</p>
+                <div class="feature-pills">
+                    <span class="pill">Editorial Design</span>
+                    <span class="pill">Fast Loading</span>
+                </div>
+                <div class="btn-order"><i class="fa-solid fa-envelope-open-text"></i> Pesan Sekarang</div>
+            </div>
+        </div>
+
+        <div class="web-card landing" onclick="openOrder('LaunchKit SaaS', 100000)">
+            <div class="web-preview" style="background-image: url('https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=800&q=80');">
+                <span class="cat-tag">Landing</span>
+                <span class="price-badge">Rp 100K</span>
+            </div>
+            <div class="web-info">
+                <h3>LaunchKit SaaS</h3>
+                <p>Halaman pendaratan konversi tinggi. Dilengkapi dengan tabel harga dan section testimoni interaktif.</p>
+                <div class="feature-pills">
+                    <span class="pill">Pricing Table</span>
+                    <span class="pill">High Conversion</span>
+                </div>
+                <div class="btn-order"><i class="fa-solid fa-rocket"></i> Pesan Sekarang</div>
+            </div>
+        </div>
+
+        <div class="web-card landing" onclick="openOrder('EventGo Register', 120000)">
+            <div class="web-preview" style="background-image: url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80');">
+                <span class="cat-tag">Landing</span>
+                <span class="price-badge">Rp 120K</span>
+            </div>
+            <div class="web-info">
+                <h3>EventGo Register</h3>
+                <p>Website khusus acara/webinar dengan fitur penghitung waktu mundur dan formulir pendaftaran.</p>
+                <div class="feature-pills">
+                    <span class="pill">Countdown Timer</span>
+                    <span class="pill">Database Peserta</span>
+                </div>
+                <div class="btn-order"><i class="fa-solid fa-rocket"></i> Pesan Sekarang</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="empty-state" id="emptyState">
+        <i class="fa-solid fa-folder-open"></i>
+        <p>Belum ada template yang cocok dengan pencarian kamu.</p>
+    </div>
+</div>
+
+<footer>&copy; 2026 SESSIONS — Premium Web Development</footer>
+
+<script>
+    function filterWeb(category, btn) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.web-card').forEach(card => {
+            card.style.display = (category === 'all' || card.classList.contains(category)) ? 'flex' : 'none';
+        });
+        const titles = {
+            all:       ['Our Websites',   'Pilih template website premium yang siap dipakai untuk bisnis kamu.'],
+            ecommerce: ['E-Commerce',      'Bangun toko online-mu sendiri. Terintegrasi langsung dengan WhatsApp.'],
+            company:   ['Company Profile', 'Tingkatkan kredibilitas bisnis dengan identitas visual yang profesional.'],
+            webletter: ['Web Letter',      'Desain elegan khusus untuk publikasi newsletter atau surat digital eksklusif.'],
+            landing:   ['Landing Pages',   'Satu halaman yang fokus mengubah pengunjung menjadi pelanggan nyata.'],
+        };
+        const [title, desc] = titles[category] || titles.all;
+        document.getElementById('pageTitle').innerText = title;
+        document.getElementById('pageDesc').innerText  = desc;
+        checkEmpty();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+        const kw = this.value.toLowerCase();
+        document.querySelectorAll('.web-card').forEach(card => {
+            const t = card.querySelector('h3')?.textContent.toLowerCase() || '';
+            const d = card.querySelector('p')?.textContent.toLowerCase()  || '';
+            const activeCat = document.querySelector('.tab.active')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1] || 'all';
+            const matchCat    = activeCat === 'all' || card.classList.contains(activeCat);
+            const matchSearch = !kw || t.includes(kw) || d.includes(kw);
+            card.style.display = (matchCat && matchSearch) ? 'flex' : 'none';
+        });
+        checkEmpty();
+    });
+
+    function checkEmpty() {
+        const visible = [...document.querySelectorAll('.web-card')].filter(c => c.style.display !== 'none');
+        document.getElementById('emptyState').style.display = visible.length === 0 ? 'block' : 'none';
+    }
+
+    // Kirim nama package + harga ke checkout.php via URL
+    function openOrder(name, price) {
+        window.location.href = `checkout.php?package=${encodeURIComponent(name)}&price=${price}`;
+    }
+</script>
+</body>
+</html>

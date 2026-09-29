@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SESSIONS | Contact</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* ── RESET & PREMIUM SESSIONS THEME ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body, html {
+            min-height: 100vh; /* Ganti height: 100% jadi min-height */
+            display: flex; /* Tambahin ini */
+            flex-direction: column; /* Tambahin ini */
+            overflow-x: hidden;
+            background-color: #050505;
+            background-image: radial-gradient(circle at 50% 0%, #151c2c 0%, #050505 70%);
+            background-attachment: fixed;
+            color: #ffffff;
+        }
+
+        /* ── CURSOR SPOTLIGHT ── */
+        .cursor-spotlight {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 70%);
+            transition: opacity 0.4s ease;
+            opacity: 0;
+        }
+
+        /* ── PARTICLE CANVAS ── */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── SHIMMER SCAN LINE ── */
+        .shimmer-line {
+            position: fixed;
+            top: -2px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 60%, transparent 100%);
+            pointer-events: none;
+            z-index: 1;
+            animation: shimmerScan 7s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        @keyframes shimmerScan {
+            0%   { top: -2px; opacity: 0; }
+            5%   { opacity: 1; }
+            95%  { opacity: 1; }
+            100% { top: 100vh; opacity: 0; }
+        }
+         /* ── SOLID NATURAL NAVBAR (Fix Turun-Turun) ── */
+        /* ── TRANSPARENT OVERLAY NAVBAR ── */
+        nav {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 25px 4%; /* Padding disamain persis kaya index */
+            background: transparent;
+            width: 100%;
+            /* Absolute dibuang biar dia jadi struktur solid yang gak bakal lompat/geser */
+            animation: fadeDownModern 1s ease-out both;
+        }
+
+        /* Nav Brand (SESSIONS) 100% Konsisten sama Index */
+        .nav-brand {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-brand:hover {
+            opacity: 0.7;
+        }
+
+        /* ── CONTACT CONTAINER ── */
+        /* ── CONTACT CONTAINER ── */
+        .contact-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Balikin padding top-nya biar nggak nabrak navbar yang melayang */
+            padding: 120px 20px 60px 20px; 
+        }
+
+        /* ── ULTRA-CLEAN GLASS CARD ── */
+        .profile-card {
+            background: rgba(20, 22, 28, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            width: 100%;
+            max-width: 400px;
+            padding: 48px 36px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-top: 1px solid rgba(255, 255, 255, 0.08); 
+            animation: scaleInModern 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        /* ── BINGKAI LOGO PREMIUM ── */
+        .profile-img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: block;
+            object-fit: cover;
+            background-color: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4px; 
+            transition: transform 0.5s ease, border-color 0.5s ease;
+        }
+
+        .profile-card:hover .profile-img {
+            transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-card h2 { 
+            font-weight: 500;
+            margin-bottom: 4px; 
+            font-size: 22px; 
+            letter-spacing: 2px;
+        }
+        
+        .profile-card p.role { 
+            color: rgba(255, 255, 255, 0.5); 
+            font-size: 12px; 
+            font-weight: 400;
+            margin-bottom: 36px; 
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* ── INFO LIST CLEAN ── */
+        .info-list {
+            text-align: left;
+            margin-bottom: 36px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 16px;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+        }
+        
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-item i { 
+            color: rgba(255, 255, 255, 0.4); 
+            font-size: 14px;
+            width: 16px; 
+            text-align: center;
+        }
+
+        /* ── SOSMED BUTTONS EXECUTIVE STYLE ── */
+        .sosmed-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sosmed-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s ease;
+        }
+
+        .sosmed-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sosmed-link i.brand-icon {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5); 
+            transition: color 0.4s ease;
+        }
+
+        .sosmed-link i.arrow-icon {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.2);
+            transition: transform 0.4s ease, color 0.4s ease;
+        }
+
+        /* Hover Effect: Border & icon nyala sesuai brand */
+        .sosmed-link.ig:hover { border-color: rgba(225, 48, 108, 0.5); background: rgba(225, 48, 108, 0.03); color: #fff; }
+        .sosmed-link.ig:hover i.brand-icon { color: #E1306C; }
+
+        .sosmed-link.gm:hover { border-color: rgba(234, 67, 53, 0.5); background: rgba(234, 67, 53, 0.03); color: #fff; }
+        .sosmed-link.gm:hover i.brand-icon { color: #EA4335; }
+
+        .sosmed-link.tt:hover { border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.03); color: #fff; }
+        .sosmed-link.tt:hover i.brand-icon { color: #ffffff; }
+
+        .sosmed-link.wa:hover { border-color: rgba(37, 211, 102, 0.5); background: rgba(37, 211, 102, 0.03); color: #fff; }
+        .sosmed-link.wa:hover i.brand-icon { color: #25D366; }
+
+        .sosmed-link:hover i.arrow-icon {
+            color: #fff;
+            transform: translateX(4px) rotate(-45deg);
+        }
+
+        /* ── FOOTER ── */
+        footer { 
+            text-align: center; 
+            padding: 30px; 
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 10px; 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: transparent; 
+            margin-top: auto; 
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeDownModern {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleInModern {
+            from { opacity: 0; transform: scale(0.98) translateY(10px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            nav { padding: 20px 6%; }
+            .profile-card { padding: 40px 24px; border-radius: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cursor Spotlight -->
+    <div class="cursor-spotlight" id="cursorSpotlight"></div>
+
+    <!-- Particle Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Shimmer Scan Line -->
+    <div class="shimmer-line"></div>
+
+
+    <!-- Navbar yang udah dikunci posisinya (Gak bakal lompat-lompat pas di-scroll) -->
+    <nav>
+        <a href="javascript:history.back()" class="nav-brand">SESSIONS</a> 
+    </nav>
+
+    <!-- Content Area -->
+    <div class="contact-container">
+        <!-- Ultra-Clean Glass Card -->
+        <div class="profile-card">
+            
+            <!-- Foto/Logo Bisnis -->
+            <img src="URL_FOTO_LOGO_LU_DISINI.png" alt="SESSIONS Logo" class="profile-img">
+
+            <h2>SESSIONS</h2>
+            <p class="role">Web Creation Service</p>
+
+            <!-- Info List -->
+            <div class="info-list">
+                <div class="info-item">
+                    <i class="fa-solid fa-building"></i> Home Made
+                </div>
+                <div class="info-item">
+                    <i class="fa-solid fa-code"></i> Creation Service
+                </div>
+                <div class="info-item">
+                    <i class="fa-solid fa-location-dot"></i> Jakarta Selatan, Indonesia
+                </div>
+            </div>
+
+            <!-- Tombol Sosmed -->
+            <div class="sosmed-grid">
+                <a href="https://instagram.com/sess_ion2026" class="sosmed-link ig" target="_blank">
+                    <div class="sosmed-left">
+                        <i class="fa-brands fa-instagram brand-icon"></i>
+                        <span>Instagram</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right arrow-icon"></i>
+                </a>
+
+                <a href="mailto:sesionsessions@gmail.com" class="sosmed-link gm">
+                    <div class="sosmed-left">
+                        <i class="fa-solid fa-envelope brand-icon"></i>
+                        <span>Email</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right arrow-icon"></i>
+                </a>
+
+                <a href="https://www.tiktok.com/@sessionssesion" class="sosmed-link tt" target="_blank">
+                    <div class="sosmed-left">
+                        <i class="fa-brands fa-tiktok brand-icon"></i>
+                        <span>TikTok</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right arrow-icon"></i>
+                </a>
+
+                <a href="https://wa.me/6287867851779" class="sosmed-link wa" target="_blank">
+                    <div class="sosmed-left">
+                        <i class="fa-brands fa-whatsapp brand-icon"></i>
+                        <span>WhatsApp</span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right arrow-icon"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        &copy; 2026 SESSIONS. All Rights Reserved.
+    </footer>
+
+    <script>
+        /* ── 1. CURSOR SPOTLIGHT ── */
+        const spotlight = document.getElementById('cursorSpotlight');
+        let spotX = window.innerWidth / 2, spotY = window.innerHeight / 2;
+        let currentX = spotX, currentY = spotY;
+        let spotVisible = false;
+
+        document.addEventListener('mousemove', (e) => {
+            spotX = e.clientX;
+            spotY = e.clientY;
+            if (!spotVisible) {
+                spotlight.style.opacity = '1';
+                spotVisible = true;
+            }
+        });
+
+        document.addEventListener('mouseleave', () => {
+            spotlight.style.opacity = '0';
+            spotVisible = false;
+        });
+
+        function animateSpotlight() {
+            currentX += (spotX - currentX) * 0.07;
+            currentY += (spotY - currentY) * 0.07;
+            spotlight.style.left = currentX + 'px';
+            spotlight.style.top = currentY + 'px';
+            requestAnimationFrame(animateSpotlight);
+        }
+        animateSpotlight();
+
+        /* ── 2. AMBIENT PARTICLES ── */
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const particles = [];
+        const PARTICLE_COUNT = 55;
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                r: Math.random() * 1.2 + 0.3,
+                alpha: Math.random() * 0.35 + 0.05,
+                vx: (Math.random() - 0.5) * 0.18,
+                vy: (Math.random() - 0.5) * 0.18,
+                pulse: Math.random() * Math.PI * 2,
+                pulseSpeed: Math.random() * 0.012 + 0.006
+            });
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.pulse += p.pulseSpeed;
+
+                if (p.x < -5) p.x = canvas.width + 5;
+                if (p.x > canvas.width + 5) p.x = -5;
+                if (p.y < -5) p.y = canvas.height + 5;
+                if (p.y > canvas.height + 5) p.y = -5;
+
+                const dynamicAlpha = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${dynamicAlpha})`;
+                ctx.fill();
+            });
+            requestAnimationFrame(drawParticles);
+        }
+        drawParticles();
+
+        /* ── 3. MAGNETIC ICON pada stat-box ── */
+        document.querySelectorAll('.stat-box').forEach(box => {
+            const icon = box.querySelector('i');
+
+            box.addEventListener('mousemove', (e) => {
+                const rect = box.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = (e.clientX - cx) * 0.28;
+                const dy = (e.clientY - cy) * 0.28;
+                if (icon) icon.style.transform = `translate(${dx}px, ${dy}px) scale(1.15)`;
+            });
+            box.addEventListener('mouseleave', () => {
+                if (icon) icon.style.transform = 'translate(0, 0) scale(1)';
+            });
+        });
+
+        /* ── 4. CHARACTER REVEAL pada H1 ── */
+        const heroTitle = document.getElementById('heroTitle');
+        const titleText = heroTitle.textContent;
+        heroTitle.textContent = '';
+
+        titleText.split('').forEach((char, i) => {
+            const span = document.createElement('span');
+            span.classList.add('char');
+            span.textContent = char === ' ' ? '\u00A0' : char;
+            span.style.animationDelay = (0.4 + i * 0.07) + 's';
+            heroTitle.appendChild(span);
+        });
+
+        /* ── 5. TYPEWRITER pada SUBTITLE ── */
+        const subtitleEl = document.getElementById('subtitle');
+        const subtitleText = 'Accelerating the World\'s Transition to High-End Digital Presence';
+        let charIndex = 0;
+
+        function typeWriter() {
+            if (charIndex < subtitleText.length) {
+                subtitleEl.textContent += subtitleText[charIndex];
+                charIndex++;
+                setTimeout(typeWriter, 32);
+            } else {
+                subtitleEl.classList.add('done');
+            }
+        }
+
+        setTimeout(typeWriter, 1600);
+    </script>
+
+
+</body>
+</html>
