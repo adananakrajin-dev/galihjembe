@@ -64,6 +64,8 @@ bisnis/
 
 - `.gitignore` menjaga agar **kredensial database, unggahan pengguna, dump SQL,
   log, dan file session** tidak pernah masuk ke repository.
+- Password pengguna disimpan sebagai **hash** (`password_hash()` / `password_verify()`),
+  bukan plaintext. Data lama yang masih plaintext otomatis di-hash ulang saat login pertama.
 - Jangan pernah menaruh password di file yang ter-track git.
 - Sebelum repository di-push publik, pastikan `git status` bersih dari
   `config.local.php`, `database.php`, dan folder `uploads/`.

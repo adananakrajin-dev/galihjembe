@@ -13,18 +13,38 @@ if(isset($_POST['submit_login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $stmt = $db->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
-    $stmt->bind_param("ss", $username, $password);
+    $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if($result->num_rows > 0) {
         $data = $result->fetch_assoc();
-        $_SESSION["sudah_login"] = true;
-        $_SESSION["username"] = $username;
-        
-        header("Location: dashboard.php");
-        exit;
+        $stored = $data['password'];
+        $valid = password_verify($password, $stored);
+
+        // Kompatibilitas data lama: password masih plaintext → cocokkan langsung,
+        // lalu otomatis upgrade ke hash saat login pertama.
+        // password_get_info()['algo'] kosong/null jika string bukan hash yang dikenali.
+        $is_known_hash = !empty(password_get_info($stored)['algo']);
+        if (!$valid && !$is_known_hash && hash_equals($stored, $password)) {
+            $valid = true;
+            $new_hash = password_hash($password, PASSWORD_DEFAULT);
+            $up = $db->prepare("UPDATE users SET password = ? WHERE username = ?");
+            $up->bind_param("ss", $new_hash, $username);
+            $up->execute();
+            $up->close();
+        }
+
+        if ($valid) {
+            $_SESSION["sudah_login"] = true;
+            $_SESSION["username"] = $username;
+
+            header("Location: dashboard.php");
+            exit;
+        } else {
+            $error = "Username atau password salah!";
+        }
     } else {
         $error = "Username atau password salah!";
     }

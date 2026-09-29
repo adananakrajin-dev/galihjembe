@@ -27,9 +27,11 @@ if(isset($_POST['submit_register'])) {
         if($stmt_check->num_rows > 0) {
             $error = "Username sudah terdaftar! Gunakan nama lain.";
         } else {
-            // Masukkan data user baru
+            // Masukkan data user baru — password di-hash, BUKAN plaintext (NFR-02 SRS)
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
             $stmt_insert = $db->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-            $stmt_insert->bind_param("ss", $username, $password);
+            $stmt_insert->bind_param("ss", $username, $password_hash);
             
             if($stmt_insert->execute()) {
                 // Jika berhasil, langsung redirect ke login tanpa alert javascript
