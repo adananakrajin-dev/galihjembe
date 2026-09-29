@@ -1,0 +1,10 @@
+# Larangan eksekusi script di folder unggahan + sembunyikan daftar file.
+Options -Indexes
+
+<FilesMatch "(?i)\.(php|phar|phtml|php3|php4|php5|php7|php8|pht|cgi|pl|py|sh|htaccess)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>

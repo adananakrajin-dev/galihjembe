@@ -1,0 +1,26 @@
+# ── Keamanan dasar (Apache / Laragon) ──
+Options -Indexes
+
+# Konfigurasi & loader koneksi tidak boleh diakses langsung via HTTP
+<FilesMatch "(?i)^(config\.local\.php|database\.php)$">
+    Require all denied
+</FilesMatch>
+
+# Dotfiles (.env, .git, .htaccess, dst.) tidak disajikan
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Folder internal ditolak dari akses HTTP (migrate.php dikecualikan untuk setup lokal)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^includes/ - [F,L]
+    RewriteRule ^database/ - [F,L]
+</IfModule>
+
+# Header keamanan dasar
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
