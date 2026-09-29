@@ -1,78 +1,96 @@
 Software Requirements Specification (SRS)
-Website Marketplace Jual Beli Barang
+SESSIONS — Marketplace Jasa Web & Produk
 
-Versi: 1.0
-Status: Draft
-Nama Proyek: Marketplace Website
+Versi: 1.1
+Status: Revisi — disesuaikan dengan visi marketplace jasa web & produk multi-seller
+Nama Proyek: SESSIONS — Marketplace Jasa Web & Produk
 Dokumen: Software Requirements Specification (SRS)
 
 1. Pendahuluan
 1.1 Tujuan
 
-Dokumen ini menjelaskan kebutuhan perangkat lunak untuk membangun sebuah website marketplace yang memungkinkan pengguna untuk menjual dan membeli barang secara online.
+Dokumen ini menjelaskan kebutuhan perangkat lunak untuk membangun SESSIONS, sebuah website marketplace multi-seller yang memungkinkan pengguna menjual jasa pembuatan website (jasa web) dan produk (fisik/digital) dalam satu platform.
 
-Website ini terinspirasi dari konsep marketplace seperti OLX, di mana pengguna dapat membuat iklan barang, mencari barang berdasarkan kategori atau kata kunci, melihat detail barang, serta menghubungi penjual.
+Website ini terinspirasi dari konsep marketplace multi-seller, di mana pengguna dapat membuat listing jasa atau produk, mencari listing berdasarkan kategori atau kata kunci, melihat detail listing, membuat order, mengunggah bukti pembayaran, serta menghubungi penjual.
 
-Sistem dibuat sebagai proyek sekolah dengan fokus pada fungsi marketplace dasar yang mudah digunakan dan dapat dikembangkan lebih lanjut.
+Sistem dibangun menggunakan PHP native dan MySQL sebagai proyek sekolah/kuliah dengan fokus pada MVP (Minimum Viable Product) yang mudah digunakan dan dapat dikembangkan lebih lanjut.
 
 1.2 Ruang Lingkup
 
 Sistem akan menyediakan fitur:
 
-Registrasi dan login pengguna.
+Registrasi, login, dan logout pengguna.
 
 Pengelolaan profil pengguna.
 
-Membuat iklan barang.
+Pengajuan menjadi seller dan approval seller oleh admin.
 
-Mengedit dan menghapus iklan.
+Katalog listing jasa web dan produk.
 
-Mencari barang.
+Pencarian dan filter kategori.
 
-Filter dan kategori barang.
+Detail listing.
 
-Melihat detail barang.
+CRUD listing khusus seller (tambah, edit, hapus).
 
-Menghubungi penjual.
+Paket jasa berjenjang (Basic/Pro/Enterprise).
 
-Menyimpan barang favorit.
+Custom brief: buyer kirim brief → seller beri penawaran → deal menjadi order.
 
-Melaporkan iklan.
+Order manual dengan instruksi bayar (transfer bank/QRIS statis) dan upload bukti pembayaran.
 
-Dashboard pengguna.
+Status order serta verifikasi pembayaran oleh admin/seller.
 
-Dashboard administrator.
+Kontak penjual via WhatsApp.
 
-Moderasi iklan oleh administrator.
+Menyimpan listing favorit.
 
-Sistem pada versi awal tidak mencakup pembayaran online dan sistem pengiriman otomatis. Transaksi dilakukan secara langsung antara pembeli dan penjual.
+Review dan rating bintang setelah order selesai.
+
+Melaporkan listing.
+
+Dashboard buyer, seller, dan admin.
+
+Moderasi listing oleh administrator.
+
+Manajemen pengguna, order, dan kategori oleh administrator.
+
+Sistem pada versi awal tidak mencakup payment gateway otomatis, ekspedisi/tracking otomatis, chat real-time, rekomendasi AI, aplikasi mobile, dan sistem lelang. Transaksi dilakukan secara manual: buyer membuat order, menerima instruksi bayar, mengunggah bukti pembayaran, lalu bukti diverifikasi oleh admin/seller.
 
 1.3 Tujuan Sistem
 
 Sistem dibuat untuk:
 
-Mempermudah pengguna menjual barang.
+Mempermudah seller menjual jasa pembuatan website melalui paket siap harga maupun custom brief.
 
-Mempermudah pengguna menemukan barang yang ingin dibeli.
+Mempermudah seller menjual produk fisik dan digital.
 
-Menyediakan tempat untuk menampilkan informasi barang secara terstruktur.
+Mempermudah pembeli menemukan jasa web dan produk yang sesuai kebutuhan.
 
-Memungkinkan pembeli dan penjual berkomunikasi.
+Menyediakan tempat untuk menampilkan informasi jasa/produk secara terstruktur.
 
-Menyediakan sistem pengelolaan iklan bagi administrator.
+Menyediakan alur transaksi manual yang jelas melalui instruksi bayar dan bukti pembayaran.
+
+Memungkinkan pembeli dan penjual berkomunikasi melalui WhatsApp.
+
+Menjaga kualitas platform melalui approval seller dan moderasi listing.
+
+Menyediakan sistem pengelolaan bagi administrator.
 
 2. Deskripsi Umum Sistem
 2.1 Perspektif Produk
 
-Website merupakan aplikasi berbasis web yang dapat diakses menggunakan browser pada komputer maupun perangkat mobile.
+Website merupakan aplikasi berbasis web yang dibangun dengan PHP native dan MySQL, serta dapat diakses menggunakan browser pada komputer maupun perangkat mobile.
 
-Secara umum sistem memiliki tiga jenis pengguna:
+Secara umum sistem memiliki empat jenis pengguna:
 
 Guest — pengguna yang belum login.
 
-User — pengguna yang sudah memiliki akun.
+Buyer (User) — pengguna yang sudah memiliki akun dan berperan sebagai pembeli.
 
-Admin — pengguna yang bertugas mengelola dan memoderasi sistem.
+Seller — pengguna yang telah disetujui admin untuk berjualan jasa web dan/atau produk.
+
+Admin — pengguna yang bertugas mengelola, memoderasi, dan memverifikasi sistem.
 
 2.2 Karakteristik Pengguna
 Guest
@@ -81,47 +99,77 @@ Guest dapat:
 
 Melihat halaman utama.
 
-Melihat daftar barang.
+Melihat katalog listing.
 
-Mencari barang.
+Mencari listing.
 
-Melihat detail barang.
+Melihat detail listing.
 
 Melihat kategori.
 
 Guest tidak dapat:
 
-Membuat iklan.
+Membuat listing.
 
-Mengirim pesan kepada penjual.
+Membuat order.
 
-Menambahkan barang ke favorit.
+Mengunggah bukti pembayaran.
+
+Menambahkan listing ke favorit.
 
 Mengelola profil.
 
-User
+Buyer (User)
 
-User dapat:
+Buyer dapat:
 
 Login dan logout.
 
 Mengelola profil.
 
-Membuat iklan.
+Melihat katalog dan detail listing.
 
-Mengedit iklan.
+Membuat order dan mengunggah bukti pembayaran.
 
-Menghapus iklan.
+Melihat status pesanan.
 
-Melihat iklan miliknya.
+Menambahkan listing ke favorit.
 
-Mencari barang.
+Memberikan review dan rating setelah order selesai.
 
-Menambahkan barang ke favorit.
+Mengirim brief custom.
 
-Menghubungi penjual.
+Menghubungi penjual via WhatsApp.
 
-Melaporkan iklan.
+Melaporkan listing.
+
+Mengajukan diri menjadi seller.
+
+Seller
+
+Seller dapat:
+
+Melakukan semua aksi yang dimiliki buyer.
+
+Membuat, mengubah, dan menghapus listing miliknya sendiri.
+
+Membuat paket jasa berjenjang.
+
+Menjawab brief dan memberi penawaran.
+
+Melihat dan memproses order masuk.
+
+Memverifikasi bukti pembayaran (bersama admin).
+
+Melihat dashboard seller.
+
+Seller tidak dapat:
+
+Mengedit atau menghapus listing seller lain.
+
+Menyetujui pengajuan seller lain.
+
+Memoderasi listing.
 
 Admin
 
@@ -129,15 +177,21 @@ Admin dapat:
 
 Login ke dashboard admin.
 
-Melihat seluruh pengguna.
+Melihat seluruh pengguna dan seluruh listing.
 
-Melihat seluruh iklan.
+Menyetujui atau menolak pengajuan seller.
 
-Menghapus iklan yang melanggar aturan.
+Memverifikasi bukti pembayaran order.
+
+Memoderasi listing (menyetujui, menolak, menonaktifkan).
+
+Menghapus listing yang melanggar aturan.
 
 Menonaktifkan akun pengguna.
 
 Mengelola kategori.
+
+Melihat dan mengelola order.
 
 Melihat laporan dari pengguna.
 
@@ -149,6 +203,8 @@ Sistem harus menyediakan fitur registrasi akun.
 Data minimal:
 
 Nama pengguna.
+
+Username.
 
 Email.
 
@@ -162,7 +218,7 @@ Email harus memiliki format yang valid.
 
 Email tidak boleh digunakan oleh akun lain.
 
-Password harus memenuhi aturan keamanan minimum.
+Password harus memenuhi aturan keamanan minimum dan disimpan dalam bentuk hash.
 
 Sistem harus memberikan pesan ketika registrasi berhasil atau gagal.
 
@@ -174,21 +230,23 @@ Email.
 
 Password.
 
-Jika data login benar, pengguna diarahkan ke halaman utama atau dashboard.
+Jika data login benar, pengguna diarahkan ke halaman utama atau dashboard sesuai role.
 
 Jika data salah, sistem menampilkan pesan kesalahan.
 
 FR-03 — Logout
 
-User dan Admin dapat keluar dari akun.
+Buyer, Seller, dan Admin dapat keluar dari akun.
 
-Setelah logout, session/token autentikasi harus dihapus atau dibuat tidak berlaku.
+Setelah logout, session autentikasi harus dihapus atau dibuat tidak berlaku.
 
 FR-04 — Profil Pengguna
 
 User dapat melihat dan mengubah:
 
 Nama.
+
+Username.
 
 Foto profil.
 
@@ -200,37 +258,59 @@ Deskripsi singkat.
 
 Email akun tidak dapat diubah sembarangan atau harus melalui mekanisme verifikasi jika fitur tersebut tersedia.
 
-FR-05 — Membuat Iklan
+FR-05 — Pengajuan Seller
 
-User dapat membuat iklan barang.
+User yang sudah login dapat mengajukan diri menjadi seller.
 
-Data iklan minimal:
+Data profil toko:
 
-Judul barang.
+Nama toko.
+
+Deskripsi toko/layanan.
+
+Nomor WhatsApp.
+
+Rekening bank / e-wallet.
+
+Status pengajuan: menunggu persetujuan, disetujui, ditolak.
+
+Ketentuan:
+
+User yang pengajuannya belum disetujui tidak dapat membuat listing.
+
+User yang ditolak dapat memperbaiki data dan mengajukan ulang.
+
+FR-06 — Approval Seller
+
+Admin dapat menyetujui atau menolak pengajuan seller.
+
+Saat disetujui, user memperoleh role seller dan dapat memposting listing.
+
+Saat ditolak, alasan penolakan dapat disimpan dan ditampilkan kepada user.
+
+FR-07 — Membuat Listing
+
+Seller dapat membuat listing dengan tipe product atau service.
+
+Data listing minimal:
+
+Judul.
 
 Deskripsi.
+
+Tipe listing.
 
 Harga.
 
 Kategori.
 
-Kondisi barang.
-
 Lokasi.
 
-Foto barang.
+Foto (wajib untuk tipe product).
 
-Status barang.
+Kondisi (khusus tipe product).
 
-Contoh kondisi:
-
-Baru.
-
-Bekas.
-
-Seperti baru.
-
-Setelah dibuat, iklan dapat berstatus:
+Setelah dibuat, listing dapat berstatus:
 
 Menunggu moderasi.
 
@@ -242,9 +322,9 @@ Terjual.
 
 Nonaktif.
 
-FR-06 — Mengubah Iklan
+FR-08 — Mengubah Listing
 
-Pemilik iklan dapat mengubah informasi iklannya.
+Pemilik listing dapat mengubah informasi listing miliknya.
 
 Informasi yang dapat diubah meliputi:
 
@@ -262,35 +342,45 @@ Lokasi.
 
 Foto.
 
-FR-07 — Menghapus Iklan
+Status.
 
-Pemilik iklan dapat menghapus atau menonaktifkan iklannya.
+Paket jasa.
 
-Iklan yang sudah dihapus tidak ditampilkan kepada pengguna umum.
+FR-09 — Menghapus Listing
 
-FR-08 — Daftar Produk
+Pemilik listing dapat menghapus atau menonaktifkan listing miliknya.
 
-Sistem menampilkan daftar barang yang tersedia.
+Listing yang sudah dihapus tidak ditampilkan kepada pengguna umum.
 
-Setiap kartu barang minimal menampilkan:
+FR-10 — Katalog Listing
+
+Sistem menampilkan daftar listing jasa web dan produk yang tersedia.
+
+Setiap kartu listing minimal menampilkan:
 
 Foto.
 
-Nama barang.
+Tipe listing (Jasa/Produk).
+
+Judul.
 
 Harga.
 
+Kategori.
+
 Lokasi.
 
-Kondisi.
+Status.
 
-FR-09 — Detail Produk
+FR-11 — Detail Listing
 
-Sistem harus menyediakan halaman detail barang.
+Sistem harus menyediakan halaman detail listing.
 
 Informasi yang ditampilkan:
 
-Foto barang.
+Foto listing.
+
+Tipe listing.
 
 Judul.
 
@@ -298,202 +388,260 @@ Harga.
 
 Deskripsi.
 
-Kondisi.
+Kategori.
+
+Kondisi (untuk produk).
 
 Lokasi.
 
-Nama penjual.
+Nama toko/penjual.
 
-Tanggal iklan dibuat.
+Rating dan review.
 
-Tombol hubungi penjual.
+Status listing.
+
+Daftar paket jasa (harga, durasi, jumlah revisi, daftar fitur) untuk listing jasa.
+
+Tombol pilih paket/buat order.
+
+Tombol kirim brief.
+
+Tombol hubungi penjual (WhatsApp).
 
 Tombol favorit.
 
 Tombol laporkan.
 
-FR-10 — Pencarian
+FR-12 — Pencarian
 
-User dapat mencari barang berdasarkan kata kunci.
+User dapat mencari listing berdasarkan kata kunci.
 
 Contoh:
 
-"Laptop Lenovo"
+"website toko online"
 
-Sistem menampilkan iklan yang memiliki kata kunci yang relevan pada judul atau deskripsi.
+Sistem menampilkan listing yang memiliki kata kunci yang relevan pada judul atau deskripsi.
 
-FR-11 — Filter
+FR-13 — Filter Kategori
 
 User dapat melakukan filter berdasarkan:
 
-Kategori.
+Kategori (jasa web dan produk).
+
+Tipe listing (service/product).
 
 Harga minimum.
 
 Harga maksimum.
 
-Kondisi.
+Kondisi (produk).
 
 Lokasi.
 
-FR-12 — Sorting
+FR-14 — Paket Jasa
 
-User dapat mengurutkan hasil berdasarkan:
+Seller dapat membuat paket jasa berjenjang pada listing tipe service.
 
-Terbaru.
+Data paket:
 
-Harga termurah.
+Nama paket (Basic/Pro/Enterprise).
 
-Harga termahal.
+Harga.
 
-FR-13 — Kategori
+Durasi pengerjaan (hari).
 
-Sistem menyediakan kategori barang.
+Jumlah revisi.
 
-Contoh:
+Daftar fitur.
 
-Elektronik.
+Buyer dapat memilih paket lalu membuat order.
 
-Kendaraan.
+FR-15 — Custom Brief & Penawaran
 
-Fashion.
+Buyer dapat mengirim brief kebutuhan website kepada seller.
 
-Rumah Tangga.
+Data brief:
 
-Buku.
+Deskripsi kebutuhan.
 
-Olahraga.
+Perkiraan budget.
 
-Lainnya.
+Deadline.
 
-Admin dapat menambah, mengubah, atau menghapus kategori.
+Seller dapat memberi penawaran berupa harga dan durasi pengerjaan.
 
-FR-14 — Favorit
+Buyer dapat menerima (deal) atau menolak penawaran.
 
-User yang login dapat menyimpan barang ke daftar favorit.
+Saat deal, penawaran otomatis menjadi order.
+
+FR-16 — Order
+
+Buyer dapat membuat order dari listing/paket yang dipilih.
+
+Data order:
+
+Kode order unik.
+
+Buyer, seller, listing, dan paket.
+
+Total tagihan.
+
+Order hanya dapat dibuat oleh user yang sudah login.
+
+Listing berstatus terjual tidak dapat menerima order baru.
+
+FR-17 — Instruksi Bayar & Upload Bukti
+
+Sistem menampilkan instruksi bayar manual:
+
+Nomor rekening bank / QRIS statis.
+
+Nominal total tagihan.
+
+Kode order sebagai referensi transfer.
+
+Buyer dapat mengunggah bukti pembayaran.
+
+Ketentuan upload:
+
+Format file JPG, JPEG, PNG, atau WebP.
+
+Ukuran maksimal 2MB.
+
+Nama file disimpan secara acak.
+
+FR-18 — Verifikasi Pembayaran
+
+Admin atau seller dapat memverifikasi bukti pembayaran.
+
+Admin/seller dapat menyetujui (status diverifikasi) atau menolak bukti pembayaran.
+
+Sistem menyimpan bukti pembayaran beserta waktu verifikasi.
+
+FR-19 — Status Order
+
+Setiap order harus melewati status:
+
+menunggu_bukti.
+
+diverifikasi.
+
+proses.
+
+selesai.
+
+batal.
+
+Buyer dan seller dapat melihat status serta riwayat order.
+
+FR-20 — Kontak Penjual
+
+Pembeli dapat menghubungi penjual melalui WhatsApp (deep link wa.me) berdasarkan nomor yang terdaftar pada profil seller.
+
+Informasi kontak ditampilkan sesuai aturan privasi sistem.
+
+FR-21 — Favorit
+
+User yang login dapat menyimpan listing ke daftar favorit.
 
 User dapat:
 
-Menambahkan barang ke favorit.
+Menambahkan listing ke favorit.
 
-Menghapus barang dari favorit.
+Menghapus listing dari favorit.
 
-Melihat daftar barang favorit.
+Melihat daftar listing favorit.
 
-FR-15 — Kontak Penjual
+FR-22 — Review & Rating
 
-Pembeli dapat menghubungi penjual melalui sistem.
+Buyer dapat memberikan review dan rating bintang setelah order selesai.
 
-Minimal tersedia:
+Ketentuan:
 
-Tombol WhatsApp atau nomor telepon yang disediakan penjual.
+Rating berupa angka 1–5 dan komentar.
 
-Jika sistem memiliki fitur chat internal, user juga dapat mengirim pesan kepada penjual melalui website.
+Satu order hanya dapat direview satu kali.
 
-FR-16 — Laporan Iklan
+Review tampil pada halaman detail listing dan profil seller.
 
-User dapat melaporkan iklan yang dianggap melanggar aturan.
+FR-23 — Dashboard Buyer / Seller
 
-Alasan laporan dapat berupa:
+Dashboard buyer menampilkan:
 
-Penipuan.
-
-Barang ilegal.
-
-Informasi palsu.
-
-Spam.
-
-Konten tidak pantas.
-
-Alasan lainnya.
-
-FR-17 — Dashboard User
-
-User memiliki dashboard yang menampilkan:
-
-Iklan saya.
+Pesanan saya beserta statusnya.
 
 Favorit.
 
+Brief yang pernah dikirim.
+
 Profil.
 
-Status iklan.
+Dashboard seller menampilkan:
 
-User dapat melihat status setiap iklan:
+Listing milik saya beserta status dan moderasi.
 
-Menunggu moderasi.
+Paket jasa.
 
-Aktif.
+Brief masuk dan penawaran.
 
-Ditolak.
+Order masuk dan bukti pembayaran.
 
-Terjual.
-
-Nonaktif.
-
-FR-18 — Dashboard Admin
+FR-24 — Dashboard Admin
 
 Admin memiliki dashboard untuk:
 
-Melihat jumlah user.
+Melihat jumlah user, seller, listing, dan order.
 
-Melihat jumlah iklan.
+Menyetujui/menolak pengajuan seller.
 
-Melihat laporan.
+Memverifikasi bukti pembayaran.
 
-Melihat iklan terbaru.
+Memoderasi listing.
 
 Mengelola user.
 
+Mengelola order.
+
 Mengelola kategori.
 
-Memoderasi iklan.
+Melihat laporan.
 
-FR-19 — Moderasi Iklan
+FR-25 — Moderasi Listing
 
 Admin dapat:
 
-Menyetujui iklan.
+Menyetujui listing.
 
-Menolak iklan.
+Menolak listing.
 
-Menonaktifkan iklan.
+Menonaktifkan listing.
 
 Melihat alasan laporan.
 
-Jika iklan ditolak, sistem dapat menyimpan alasan penolakan.
-
-FR-20 — Manajemen Pengguna
-
-Admin dapat melihat daftar pengguna.
-
-Admin dapat:
-
-Melihat profil pengguna.
-
-Menonaktifkan akun.
-
-Mengaktifkan kembali akun.
-
-Melihat iklan milik pengguna.
+Jika listing ditolak, sistem menyimpan alasan penolakan.
 
 4. Non-Functional Requirements
 NFR-01 — Performance
 
-Halaman utama sebaiknya dapat dimuat dalam waktu kurang dari 3 detik pada koneksi internet yang normal.
+Halaman utama dan katalog sebaiknya dapat dimuat dalam waktu kurang dari 3 detik pada koneksi internet yang normal.
 
 Pencarian harus memberikan hasil dalam waktu yang wajar.
 
-Gambar harus dikompresi agar tidak terlalu membebani server.
+Gambar listing dan bukti pembayaran harus dikompresi agar tidak terlalu membebani server.
 
 NFR-02 — Security
 
 Password harus disimpan dalam bentuk hash, bukan plaintext.
 
+Setiap form harus dilindungi token CSRF.
+
+Upload foto dan bukti pembayaran harus divalidasi: tipe file (MIME), ukuran maksimal 2MB, dan nama file acak.
+
 Sistem harus menggunakan autentikasi untuk halaman yang membutuhkan login.
 
-User hanya boleh mengubah atau menghapus iklan miliknya sendiri.
+Sistem harus menggunakan role gate sesuai hak akses (guest, buyer, seller, admin).
+
+User hanya boleh mengubah atau menghapus listing miliknya sendiri.
 
 Admin memiliki hak akses khusus.
 
@@ -507,15 +655,27 @@ Mudah digunakan oleh pengguna baru.
 
 Memiliki navigasi yang jelas.
 
-Responsive pada desktop dan mobile.
-
 Menggunakan bahasa yang mudah dipahami.
 
-NFR-04 — Availability
+Menampilkan pesan error yang jelas dan tidak teknis.
+
+NFR-04 — Responsive
+
+Website harus dapat digunakan pada lebar layar:
+
+360px (smartphone).
+
+768px (tablet).
+
+1024px (laptop/desktop).
+
+Desktop dan laptop besar.
+
+NFR-05 — Availability
 
 Sistem diharapkan dapat digunakan selama server aktif dan memiliki koneksi internet.
 
-NFR-05 — Maintainability
+NFR-06 — Maintainability
 
 Kode program harus:
 
@@ -523,11 +683,11 @@ Terstruktur.
 
 Menggunakan penamaan yang konsisten.
 
-Memisahkan frontend, backend, dan database jika memungkinkan.
+Memisahkan halaman, logika bisnis, dan akses database jika memungkinkan.
 
 Memiliki dokumentasi untuk bagian penting sistem.
 
-NFR-06 — Compatibility
+NFR-07 — Compatibility
 
 Website dapat digunakan pada browser modern seperti:
 
@@ -543,28 +703,38 @@ Safari.
 5.1 Aktor
 Aktor	Deskripsi
 Guest	Pengunjung yang belum login
-User	Pengguna yang sudah login
+Buyer (User)	Pengguna yang sudah login dan berperan sebagai pembeli
+Seller	Pengguna yang sudah disetujui admin untuk berjualan
 Admin	Pengelola sistem
 5.2 Use Case Utama
 ID	Use Case	Aktor
 UC-01	Registrasi	Guest
-UC-02	Login	User/Admin
-UC-03	Logout	User/Admin
-UC-04	Melihat produk	Guest/User
-UC-05	Mencari produk	Guest/User
-UC-06	Filter produk	Guest/User
-UC-07	Melihat detail produk	Guest/User
-UC-08	Membuat iklan	User
-UC-09	Mengedit iklan	User
-UC-10	Menghapus iklan	User
-UC-11	Menambahkan favorit	User
-UC-12	Menghubungi penjual	User
-UC-13	Melaporkan iklan	User
-UC-14	Mengelola profil	User
-UC-15	Mengelola iklan	Admin
-UC-16	Mengelola user	Admin
-UC-17	Mengelola kategori	Admin
-UC-18	Memproses laporan	Admin
+UC-02	Login	Buyer/Seller/Admin
+UC-03	Logout	Buyer/Seller/Admin
+UC-04	Melihat katalog	Guest/User
+UC-05	Mencari listing	Guest/User
+UC-06	Filter kategori	Guest/User
+UC-07	Melihat detail listing	Guest/User
+UC-08	Mengelola profil	User
+UC-09	Mengajukan jadi seller	User
+UC-10	Menyetujui/menolak seller	Admin
+UC-11	Membuat listing	Seller
+UC-12	Mengedit listing	Seller
+UC-13	Menghapus listing	Seller
+UC-14	Membuat paket jasa	Seller
+UC-15	Mengirim brief custom	User
+UC-16	Memberi penawaran brief	Seller
+UC-17	Membuat order	User
+UC-18	Upload bukti pembayaran	User
+UC-19	Verifikasi pembayaran	Seller/Admin
+UC-20	Memberi review & rating	User
+UC-21	Menambahkan favorit	User
+UC-22	Menghubungi penjual (WhatsApp)	User
+UC-23	Melaporkan listing	User
+UC-24	Memoderasi listing	Admin
+UC-25	Mengelola pengguna	Admin
+UC-26	Mengelola order	Admin
+UC-27	Mengelola kategori	Admin
 6. Database Requirements
 
 Database minimal terdiri dari tabel berikut:
@@ -573,78 +743,169 @@ Users
 Field	Tipe	Keterangan
 id	Integer	Primary key
 name	String	Nama user
-email	String	Email
+username	String	Username unik
+email	String	Email unik
 password	String	Password yang telah di-hash
 phone	String	Nomor telepon
 location	String	Lokasi
 avatar	String	Foto profil
-role	Enum	user/admin
+role	Enum	buyer/seller/admin
 status	Enum	active/inactive
 created_at	DateTime	Waktu dibuat
 updated_at	DateTime	Waktu diperbarui
-Products
+Seller Profiles
 Field	Tipe	Keterangan
 id	Integer	Primary key
-user_id	Integer	Pemilik iklan
+user_id	Integer	ID pemilik (users)
+store_name	String	Nama toko
+deskripsi	Text	Deskripsi toko/layanan
+approval	Enum	pending/approved/rejected
+rekening	String	Rekening bank / e-wallet
+created_at	DateTime	Waktu dibuat
+Listings
+Field	Tipe	Keterangan
+id	Integer	Primary key
+seller_id	Integer	Pemilik listing (users)
+type	Enum	product/service
+title	String	Judul listing
+description	Text	Deskripsi listing
 category_id	Integer	Kategori
-title	String	Judul
-description	Text	Deskripsi
 price	Decimal	Harga
-condition	Enum	Kondisi barang
+condition	Enum	Kondisi barang (produk)
 location	String	Lokasi
-status	Enum	Status iklan
+status	Enum	aktif/terjual/nonaktif
+moderation	Enum	pending/approved/rejected
 created_at	DateTime	Waktu dibuat
 updated_at	DateTime	Waktu diperbarui
-Product Images
+Listing Packages
 Field	Tipe	Keterangan
 id	Integer	Primary key
-product_id	Integer	ID barang
+listing_id	Integer	ID listing jasa
+name	String	Nama paket (Basic/Pro/Enterprise)
+price	Decimal	Harga paket
+duration_days	Integer	Durasi pengerjaan (hari)
+revisions	Integer	Jumlah revisi
+features	Text	Daftar fitur paket
+Listing Images
+Field	Tipe	Keterangan
+id	Integer	Primary key
+listing_id	Integer	ID listing
 image_url	String	Lokasi gambar
 is_primary	Boolean	Gambar utama
 Categories
 Field	Tipe	Keterangan
 id	Integer	Primary key
 name	String	Nama kategori
+type	Enum	jasa/produk
 created_at	DateTime	Waktu dibuat
+Briefs
+Field	Tipe	Keterangan
+id	Integer	Primary key
+buyer_id	Integer	ID pembeli
+seller_id	Integer	ID seller yang dituju
+listing_id	Integer	ID listing jasa
+kebutuhan	Text	Deskripsi kebutuhan website
+budget	Decimal	Perkiraan budget
+deadline	Date	Deadline yang diharapkan
+penawaran	Decimal	Harga penawaran seller
+status	Enum	dikirim/penawaran/deal/ditolak
+created_at	DateTime	Waktu dikirim
+Orders
+Field	Tipe	Keterangan
+id	Integer	Primary key
+order_code	String	Kode order unik
+buyer_id	Integer	ID pembeli
+seller_id	Integer	ID penjual
+listing_id	Integer	ID listing
+package_id	Integer	ID paket (opsional)
+total	Decimal	Total tagihan
+payment_proof	String	Bukti pembayaran yang diunggah
+status	Enum	menunggu_bukti/diverifikasi/proses/selesai/batal
+created_at	DateTime	Waktu order dibuat
+Reviews
+Field	Tipe	Keterangan
+id	Integer	Primary key
+order_id	Integer	ID order yang direview
+buyer_id	Integer	ID pembeli pemberi review
+seller_id	Integer	ID seller penerima review
+rating	Integer	Rating bintang 1–5
+comment	Text	Komentar review
+created_at	DateTime	Waktu review dibuat
 Favorites
 Field	Tipe	Keterangan
 id	Integer	Primary key
 user_id	Integer	ID user
-product_id	Integer	ID barang
+listing_id	Integer	ID listing
 created_at	DateTime	Waktu dibuat
 Reports
 Field	Tipe	Keterangan
 id	Integer	Primary key
 user_id	Integer	Pelapor
-product_id	Integer	Barang yang dilaporkan
+listing_id	Integer	Listing yang dilaporkan
 reason	String	Alasan laporan
 status	Enum	pending/resolved/rejected
 created_at	DateTime	Waktu dibuat
+Relationship
+
+1:N users → seller_profiles
+
+1:N users → listings (sebagai seller)
+
+1:N users → orders (sebagai buyer)
+
+1:N listings → listing_packages
+
+1:N listings → listing_images
+
+1:N listings → orders
+
+1:N orders → reviews
+
+1:N categories → listings
+
+N:N users ↔ listings melalui favorites
+
 7. Business Rules
 
 Satu email hanya dapat digunakan oleh satu akun.
 
-User hanya dapat mengedit dan menghapus iklannya sendiri.
+Password harus disimpan dalam bentuk hash.
 
-Barang yang berstatus terjual tidak boleh menerima transaksi baru.
+User yang tidak login tidak dapat membuat order, listing, atau favorit.
 
-Iklan harus melewati proses moderasi jika fitur moderasi diaktifkan.
+User harus menyetujui pengajuan seller yang disetujui admin sebelum dapat membuat listing.
 
-User yang tidak login tidak dapat membuat iklan.
+User hanya dapat mengedit dan menghapus listing miliknya sendiri.
 
-User yang tidak login tidak dapat menggunakan fitur favorit.
+Listing harus melewati proses moderasi sebelum tampil kepada publik.
 
-Admin dapat menonaktifkan iklan yang melanggar aturan.
+Setiap listing harus memiliki judul, harga, kategori, dan deskripsi.
+
+Harga listing dan paket harus berupa angka positif.
+
+Listing bertipe product wajib memiliki minimal satu foto.
+
+Listing bertipe service wajib memiliki minimal satu paket jasa.
+
+Order yang dibuat dari listing berstatus terjual tidak boleh diterima.
+
+Bukti pembayaran wajib diunggah sebelum order dapat diverifikasi oleh admin/seller.
+
+Review hanya dapat diberikan oleh buyer untuk order berstatus selesai.
+
+Admin dapat menonaktifkan listing yang melanggar aturan.
 
 Admin dapat menonaktifkan akun pengguna.
 
-Harga barang harus berupa angka positif.
+Admin dapat menyetujui atau menolak pengajuan seller.
 
-Iklan harus memiliki minimal satu foto.
+Seller tidak boleh menjual jasa atau produk yang dilarang oleh aturan website.
+
+User yang tidak login tidak dapat melaporkan listing.
 
 8. System Architecture
 
-Sistem menggunakan arsitektur client-server.
+Sistem menggunakan arsitektur client-server dengan PHP native dan MySQL.
 
 +----------------------+
 |      User Browser    |
@@ -655,25 +916,28 @@ Sistem menggunakan arsitektur client-server.
            v
 +----------------------+
 |       Frontend       |
-| UI / Pages / Forms   |
+| HTML / CSS / JS      |
 +----------+-----------+
            |
-           | API
+           | PHP (form & query)
            v
 +----------------------+
 |       Backend        |
+| PHP Native           |
 | Auth / Business Logic|
 +----------+-----------+
            |
            v
 +----------------------+
-|       Database       |
-| Users / Products /   |
+|      Database        |
+|        MySQL         |
+| Users / Listings /   |
+| Orders / Reviews /   |
 | Categories / Reports |
 +----------------------+
 
 
-Teknologi yang dapat digunakan:
+Teknologi yang digunakan:
 
 Frontend
 
@@ -683,29 +947,13 @@ CSS.
 
 JavaScript.
 
-React/Vue (opsional).
-
 Backend
 
-Salah satu:
-
-Node.js + Express.
-
-Laravel.
-
-Django.
-
-PHP Native.
+PHP Native (tanpa framework).
 
 Database
 
-Salah satu:
-
 MySQL.
-
-PostgreSQL.
-
-MongoDB.
 
 9. User Interface Requirements
 Halaman Utama
@@ -718,21 +966,25 @@ Search bar.
 
 Tombol login/register.
 
-Kategori.
+Kategori jasa web dan produk.
 
-Daftar barang terbaru.
+Daftar listing terbaru.
 
-Tombol jual barang.
+Tombol jual (ajukan jadi seller / buat listing).
 
-Halaman Detail Barang
+Halaman Detail Listing
 
 Menampilkan:
 
 Foto.
 
-Nama barang.
+Tipe listing (Jasa/Produk).
+
+Judul.
 
 Harga.
+
+Kategori.
 
 Kondisi.
 
@@ -740,27 +992,63 @@ Lokasi.
 
 Deskripsi.
 
-Informasi penjual.
+Informasi penjual/toko.
 
-Tombol hubungi penjual.
+Rating dan review.
+
+Daftar paket jasa (untuk listing jasa).
+
+Tombol pilih paket / kirim brief.
+
+Tombol hubungi penjual (WhatsApp).
 
 Tombol favorit.
 
 Tombol laporan.
 
-Dashboard User
+Halaman Checkout / Instruksi Bayar
+
+Menampilkan:
+
+Kode order.
+
+Rincian tagihan.
+
+Nominal transfer.
+
+Nomor rekening / QRIS statis.
+
+Form upload bukti pembayaran.
+
+Status order.
+
+Dashboard Buyer
 
 Menampilkan:
 
 Profil.
 
-Daftar iklan.
-
-Status iklan.
+Pesanan saya dan statusnya.
 
 Favorit.
 
-Tombol tambah iklan.
+Brief yang pernah dikirim.
+
+Dashboard Seller
+
+Menampilkan:
+
+Profil toko dan status approval.
+
+Daftar listing beserta status moderasi.
+
+Paket jasa.
+
+Brief masuk dan penawaran.
+
+Order masuk dan bukti pembayaran.
+
+Tombol tambah listing.
 
 Dashboard Admin
 
@@ -768,9 +1056,15 @@ Menampilkan:
 
 Statistik website.
 
+Daftar pengajuan seller (approval).
+
+Daftar bukti pembayaran untuk diverifikasi.
+
+Daftar listing (moderasi).
+
 Daftar user.
 
-Daftar iklan.
+Daftar order.
 
 Daftar laporan.
 
@@ -784,60 +1078,78 @@ User dapat membuat akun.
 
 User dapat login dan logout.
 
-User dapat membuat iklan.
+User dapat mengelola profil.
 
-User dapat mengunggah foto barang.
+User dapat mengajukan diri menjadi seller dan menunggu approval admin.
 
-User dapat mengedit dan menghapus iklan miliknya.
+Admin dapat menyetujui atau menolak pengajuan seller.
 
-Pengunjung dapat mencari barang.
+Seller dapat membuat listing jasa atau produk.
 
-Pengunjung dapat menggunakan filter.
+Seller dapat mengunggah foto listing.
 
-Pengunjung dapat melihat detail barang.
+Seller dapat mengedit dan menghapus listing miliknya.
 
-User dapat menyimpan barang ke favorit.
+Seller dapat membuat paket jasa berjenjang.
 
-User dapat menghubungi penjual.
+Pengunjung dapat mencari listing.
 
-User dapat melaporkan iklan.
+Pengunjung dapat menggunakan filter kategori.
+
+Pengunjung dapat melihat detail listing.
+
+User dapat mengirim brief custom dan seller dapat memberi penawaran.
+
+User dapat membuat order dan melihat instruksi bayar.
+
+User dapat mengunggah bukti pembayaran.
+
+Admin/seller dapat memverifikasi pembayaran dan mengubah status order.
+
+User dapat menyimpan listing ke favorit.
+
+User dapat menghubungi penjual via WhatsApp.
+
+User dapat melaporkan listing.
+
+Buyer dapat memberikan review dan rating setelah order selesai.
 
 Admin dapat mengelola user.
 
-Admin dapat mengelola kategori.
+Admin dapat mengelola order dan kategori.
 
-Admin dapat memoderasi iklan.
+Admin dapat memoderasi listing.
 
-Website dapat digunakan pada desktop dan mobile.
+Website dapat digunakan pada lebar 360px, 768px, dan 1024px.
 
 11. Future Development
 
 Fitur berikut dapat dikembangkan pada versi berikutnya:
 
+Payment gateway otomatis.
+
+Checkout dan pembayaran online otomatis.
+
+Payout otomatis ke rekening seller.
+
 Chat real-time.
 
-Sistem pembayaran online.
-
-Sistem checkout.
+Sistem notifikasi.
 
 Integrasi jasa pengiriman.
 
-Rating dan review penjual.
+Tracking pengiriman otomatis.
 
-Notifikasi email.
+Rekomendasi berbasis AI.
 
-Push notification.
+Sistem lelang/nego harga.
 
 Verifikasi identitas pengguna.
-
-Rekomendasi barang.
-
-Sistem bidding/nego harga.
 
 Aplikasi Android/iOS.
 
 12. Kesimpulan
 
-Website marketplace ini dirancang untuk menyediakan platform jual beli barang yang sederhana dan mudah digunakan. Sistem memungkinkan pengguna membuat dan mencari iklan barang serta berkomunikasi dengan penjual.
+SESSIONS — Marketplace Jasa Web & Produk dirancang untuk menyediakan platform multi-seller yang sederhana dan mudah digunakan, tempat pengguna menjual jasa pembuatan website dan produk fisik/digital. Sistem memungkinkan pengguna membuat listing, mencari dan melihat detail listing, membuat order dengan instruksi bayar manual dan upload bukti pembayaran, menghubungi penjual, serta memberikan review dan rating.
 
-Untuk tahap awal proyek sekolah, fokus utama adalah autentikasi pengguna, CRUD iklan, pencarian, kategori, favorit, laporan, dan dashboard admin. Fitur seperti pembayaran online, pengiriman, dan chat real-time dapat dikembangkan pada tahap selanjutnya.
+Untuk tahap awal proyek sekolah/kuliah, fokus utama adalah autentikasi pengguna, approval seller, CRUD listing, paket jasa, custom brief, order manual beserta verifikasi pembayaran, pencarian, kategori, favorit, review, dan dashboard admin. Fitur seperti payment gateway otomatis, pengiriman, chat real-time, dan rekomendasi AI dapat dikembangkan pada tahap selanjutnya.

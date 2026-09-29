@@ -1,52 +1,61 @@
 Business Requirements Document (BRD)
-Website Jual Beli Barang Bekas
+SESSIONS — Marketplace Jasa Web & Produk
 
-Dokumen ini berisi kebutuhan bisnis dan fungsional untuk pengembangan website jual beli barang bekas.
+Dokumen ini berisi kebutuhan bisnis dan fungsional untuk pengembangan SESSIONS, marketplace multi-seller tempat pengguna menjual jasa web (jasa pembuatan website) dan produk (fisik/digital) secara bersamaan dalam satu platform.
 
 1. Informasi Proyek
 Informasi	Detail
-Nama Proyek	Website Jual Beli Barang Bekas
-Jenis Proyek	Website E-Commerce
-Platform	Website
-Target Pengguna	Pelajar, mahasiswa, dan masyarakat umum
+Nama Proyek	SESSIONS — Marketplace Jasa Web & Produk
+Jenis Proyek	Marketplace Multi-Seller (Jasa Web & Produk)
+Platform	Website (PHP Native + MySQL)
+Target Pengguna	Pelajar, mahasiswa, pekerja lepas, dan masyarakat umum
+Metode Transaksi	Manual — transfer bank / QRIS statis + upload bukti, diverifikasi admin/seller
 Status	Development
+Versi Dokumen	1.1
+
 2. Latar Belakang
 
-Banyak orang memiliki barang yang sudah tidak digunakan tetapi masih memiliki kondisi yang layak dan nilai jual. Di sisi lain, terdapat orang yang membutuhkan barang dengan harga lebih terjangkau.
+Saat ini jasa pembuatan website banyak ditawarkan melalui media sosial atau forum secara tidak terstruktur, sehingga calon pembeli kesulitan membandingkan layanan, harga, durasi pengerjaan, dan jumlah revisi. Di sisi lain, banyak developer perorangan (freelancer, pelajar, mahasiswa) yang memiliki kemampuan membuat website tetapi tidak memiliki kanal penjualan yang mudah.
 
-Oleh karena itu, diperlukan sebuah platform yang dapat mempertemukan penjual dan pembeli barang bekas secara mudah dan praktis.
+Selain jasa web, pengguna juga membutuhkan tempat menjual produk fisik maupun digital. Kedua kebutuhan tersebut hadir di satu platform yang sama sehingga pengguna cukup membuat satu akun.
 
-Website ini dibuat sebagai platform jual beli barang bekas yang memungkinkan pengguna untuk menjual barang yang sudah tidak digunakan dan mencari barang bekas sesuai kebutuhan.
+Oleh karena itu, diperlukan sebuah platform yang mempertemukan penjual jasa web dan penjual produk dengan pembeli secara mudah, transparan, dan praktis.
+
+Website ini dibuat sebagai marketplace multi-seller tempat pengguna dapat menjual jasa pembuatan website (melalui paket siap harga maupun custom brief) dan produk (fisik/digital) serta membeli layanan/produk dari seller lain.
 
 3. Tujuan Proyek
 
 Tujuan dari pembuatan website ini adalah:
 
-Menyediakan platform untuk menjual barang bekas dengan mudah.
+Menyediakan platform bagi seller untuk menjual jasa pembuatan website melalui paket siap harga maupun penawaran custom.
 
-Memudahkan pengguna dalam mencari dan membeli barang bekas.
+Menyediakan tempat bagi pengguna menjual produk fisik dan digital bersama jasa web dalam satu platform.
 
-Membantu pengguna mendapatkan barang dengan harga yang lebih terjangkau.
+Memudahkan pembeli mencari dan membandingkan jasa web serta produk sesuai kebutuhan dan budget.
 
-Membantu barang yang sudah tidak digunakan agar dapat dimanfaatkan kembali.
+Menyediakan proses transaksi manual yang sederhana dan transparan melalui instruksi pembayaran dan upload bukti.
 
-Menyediakan informasi barang yang jelas kepada calon pembeli.
+Menjaga kualitas platform melalui persetujuan seller oleh admin dan moderasi listing.
 
-Membuat proses jual beli barang bekas menjadi lebih praktis.
+Menyediakan informasi jasa/produk yang jelas kepada calon pembeli.
+
+Membuat proses jual beli jasa web dan produk menjadi lebih praktis dan terorganisir.
 
 4. Permasalahan
 
 Beberapa permasalahan yang ingin diselesaikan melalui website ini:
 
-Banyak barang yang masih layak digunakan tetapi hanya disimpan atau tidak digunakan.
+Calon pembeli sulit menemukan penyedia jasa pembuatan website yang terpercaya dan transparan harganya.
 
-Penjual barang bekas kesulitan menemukan calon pembeli.
+Penjual jasa/freelancer tidak memiliki kanal penjualan yang tersentralisasi dan mudah ditemukan.
 
-Pembeli kesulitan menemukan barang bekas yang sesuai dengan kebutuhan dan budget.
+Pesanan jasa web sering tidak memiliki format brief dan kesepakatan yang jelas antara pembeli dan penjual.
 
-Informasi mengenai kondisi dan harga barang terkadang tidak tersedia secara jelas.
+Transaksi jarak jauh rawan kesalahpahaman karena tidak ada alur pembayaran dan bukti yang terstruktur.
 
-Belum adanya platform sederhana yang secara khusus ditujukan untuk kebutuhan proyek ini.
+Listing berkualitas rendah, palsu, atau melanggar aturan dapat menurunkan kepercayaan pengguna terhadap marketplace.
+
+Belum adanya platform sederhana yang memuat jasa web dan produk dalam satu tempat untuk kebutuhan proyek ini.
 
 5. Solusi
 
@@ -54,91 +63,124 @@ Solusi yang ditawarkan adalah membuat website marketplace sederhana yang memungk
 
 Membuat akun.
 
-Menjual barang bekas.
+Mengajukan diri menjadi seller dengan mengisi profil toko (menunggu approval admin).
 
-Mengunggah foto barang.
+Menjual jasa web melalui paket siap harga berjenjang (Basic/Pro/Enterprise).
 
-Memberikan informasi mengenai kondisi barang.
+Menjual jasa web melalui custom brief dan penawaran.
 
-Menentukan harga barang.
+Menjual produk fisik atau digital.
 
-Mencari barang berdasarkan nama atau kategori.
+Mengunggah foto listing.
 
-Melihat detail barang.
+Menentukan harga listing.
 
-Menghubungi penjual.
+Mencari listing berdasarkan kata kunci atau kategori.
+
+Melihat detail listing.
+
+Membuat order dan menerima instruksi pembayaran (transfer bank/QRIS statis).
+
+Mengunggah bukti pembayaran.
+
+Menghubungi penjual melalui WhatsApp.
+
+Menyimpan listing favorit.
+
+Memberikan review dan rating bintang setelah order selesai.
 
 6. Stakeholder
 Stakeholder	Peran
-Pembeli	Mencari dan membeli barang bekas
-Penjual	Menjual barang bekas
-Admin	Mengelola pengguna dan produk
+Pembeli (Buyer)	Mencari dan membeli jasa web / produk
+Penjual (Seller)	Menjual jasa web dan/atau produk
+Admin	Mengelola pengguna, approve seller, verifikasi pembayaran, dan moderasi listing
 Developer	Mengembangkan dan memelihara website
+
 7. Target Pengguna
-7.1 Pembeli
+7.1 Pembeli (Buyer)
 
-Pengguna yang ingin mencari dan membeli barang bekas dengan harga yang lebih terjangkau.
+Pengguna yang ingin membeli jasa pembuatan website atau produk sesuai kebutuhan dan budget, dengan informasi harga, durasi, dan ketentuan yang jelas.
 
-7.2 Penjual
+7.2 Penjual (Seller)
 
-Pengguna yang memiliki barang bekas yang sudah tidak digunakan dan ingin menjualnya.
+Pengguna yang menawarkan jasa pembuatan website (melalui paket atau custom brief) dan/atau produk fisik/digital. Seller wajib mendapat persetujuan admin sebelum dapat memposting listing.
 
 7.3 Admin
 
-Pengguna dengan hak akses khusus untuk mengelola data dan aktivitas dalam website.
+Pengguna dengan hak akses khusus untuk mengelola pengguna, menyetujui pengajuan seller, memverifikasi pembayaran, memoderasi listing, dan mengelola data dalam website.
 
 8. Ruang Lingkup
-8.1 Fitur yang Termasuk
+8.1 Fitur yang Termasuk (MVP)
 
-Registrasi akun.
+Autentikasi: registrasi, login, logout, dan profil pengguna.
 
-Login dan logout.
+Katalog listing (jasa web dan produk).
 
-Manajemen profil pengguna.
+Pencarian dan filter kategori.
 
-Menambahkan produk.
+Detail listing.
 
-Mengunggah foto produk.
+CRUD listing khusus seller (tambah, edit, hapus).
 
-Mengubah informasi produk.
+Paket jasa berjenjang (Basic/Pro/Enterprise).
 
-Menghapus produk.
+Custom brief: buyer kirim brief kebutuhan → seller beri penawaran → deal menjadi order.
 
-Melihat daftar produk.
+Order manual + upload bukti pembayaran.
 
-Mencari produk.
+Status order.
 
-Filter berdasarkan kategori.
+Kontak penjual via WhatsApp.
 
-Melihat detail produk.
+Favorit.
 
-Menampilkan kondisi barang.
+Dashboard buyer, seller, dan admin.
 
-Menampilkan harga barang.
+Approval seller oleh admin.
 
-Menghubungi penjual.
+Moderasi listing.
 
-Manajemen produk oleh admin.
+Review dan rating bintang setelah order selesai.
 
-Manajemen pengguna oleh admin.
-
-8.2 Fitur yang Tidak Termasuk
+8.2 Fitur yang Tidak Termasuk (Out of Scope)
 
 Untuk versi awal proyek, fitur berikut tidak termasuk dalam scope:
 
-Pembayaran online.
+Payment gateway otomatis.
 
-Integrasi payment gateway.
+Ekspedisi dan tracking otomatis.
 
-Integrasi jasa ekspedisi.
+Chat real-time.
 
-Sistem tracking pengiriman.
+Sistem rekomendasi berbasis AI.
 
-Sistem lelang.
+Aplikasi mobile.
+
+Sistem lelang (auction).
 
 Integrasi dengan marketplace lain.
 
-Sistem rekomendasi berbasis AI.
+8.3 Cara Transaksi pada Versi Awal (Manual)
+
+Transaksi pada MVP dilakukan secara manual tanpa payment gateway otomatis:
+
+Buyer membuat order.
+
+Sistem menampilkan instruksi bayar (transfer bank / QRIS statis).
+
+Buyer upload bukti pembayaran.
+
+Admin/seller memverifikasi bukti pembayaran.
+
+Status order berjalan: menunggu_bukti → diverifikasi → proses → selesai (atau batal).
+
+Payment gateway tetap menjadi future development.
+
+8.4 Dua Cara Menjual Jasa Web
+
+Paket siap harga: seller membuat paket berjenjang (Basic/Pro/Enterprise) yang memuat harga, durasi pengerjaan, jumlah revisi, dan daftar fitur. Buyer memilih paket lalu membuat order.
+
+Custom brief: buyer mengirim brief kebutuhan website → seller memberi penawaran (harga dan durasi) → terjadi kesepakatan (deal) → penawaran menjadi order.
 
 9. Kebutuhan Fungsional
 ID	Fitur	Deskripsi	Prioritas
@@ -146,17 +188,28 @@ FR-01	Registrasi	Pengguna dapat membuat akun baru	High
 FR-02	Login	Pengguna dapat masuk ke dalam sistem	High
 FR-03	Logout	Pengguna dapat keluar dari akun	Medium
 FR-04	Profil	Pengguna dapat melihat dan mengubah profil	Medium
-FR-05	Tambah Produk	Penjual dapat menambahkan barang yang ingin dijual	High
-FR-06	Edit Produk	Penjual dapat mengubah informasi barang	High
-FR-07	Hapus Produk	Penjual dapat menghapus barang	High
-FR-08	Daftar Produk	Pengguna dapat melihat barang yang tersedia	High
-FR-09	Pencarian	Pengguna dapat mencari barang berdasarkan kata kunci	High
-FR-10	Kategori	Pengguna dapat memfilter barang berdasarkan kategori	Medium
-FR-11	Detail Produk	Pengguna dapat melihat informasi lengkap produk	High
-FR-12	Kontak Penjual	Pembeli dapat menghubungi penjual	High
-FR-13	Status Produk	Produk dapat diberi status tersedia atau terjual	Medium
-FR-14	Manajemen Pengguna	Admin dapat mengelola data pengguna	Medium
-FR-15	Manajemen Produk	Admin dapat mengelola produk yang tersedia	High
+FR-05	Pengajuan Seller	Pengguna dapat mengajukan diri menjadi seller dengan mengisi profil toko	High
+FR-06	Approval Seller	Admin menyetujui atau menolak pengajuan seller sebelum seller dapat memposting listing	High
+FR-07	Tambah Listing	Seller dapat menambahkan listing jasa web atau produk	High
+FR-08	Edit Listing	Seller dapat mengubah listing miliknya sendiri	High
+FR-09	Hapus Listing	Seller dapat menghapus listing miliknya sendiri	High
+FR-10	Katalog Listing	Pengguna dapat melihat daftar listing jasa dan produk	High
+FR-11	Pencarian	Pengguna dapat mencari listing berdasarkan kata kunci	High
+FR-12	Kategori & Filter	Pengguna dapat memfilter listing berdasarkan kategori jasa web/produk	Medium
+FR-13	Detail Listing	Pengguna dapat melihat informasi lengkap listing	High
+FR-14	Paket Jasa	Seller dapat membuat paket jasa berjenjang (Basic/Pro/Enterprise) berisi harga, durasi, jumlah revisi, dan daftar fitur	High
+FR-15	Custom Brief	Buyer mengirim brief kebutuhan jasa web, seller memberi penawaran, dan kesepakatan menjadi order	High
+FR-16	Buat Order	Buyer dapat membuat order dari listing atau kesepakatan penawaran	High
+FR-17	Instruksi Bayar & Upload Bukti	Sistem menampilkan instruksi bayar (transfer bank/QRIS statis) dan buyer dapat mengunggah bukti pembayaran	High
+FR-18	Verifikasi Pembayaran	Admin/seller memverifikasi bukti pembayaran dan mengubah status order	High
+FR-19	Status Order	Setiap order memiliki status: menunggu_bukti, diverifikasi, proses, selesai, batal	High
+FR-20	Kontak Penjual	Buyer dapat menghubungi penjual melalui WhatsApp	High
+FR-21	Favorit	Pengguna yang login dapat menyimpan listing ke daftar favorit	Medium
+FR-22	Review & Rating	Buyer dapat memberikan review dan rating bintang setelah order selesai	Medium
+FR-23	Dashboard Buyer/Seller	Buyer melihat pesanan dan favorit; seller melihat listing, paket, brief, dan order masuk	High
+FR-24	Dashboard Admin	Admin dapat approve seller, verifikasi pembayaran, memoderasi listing, serta mengelola user, order, dan kategori	High
+FR-25	Laporan Listing	Pengguna dapat melaporkan listing yang dianggap melanggar aturan	Medium
+
 10. Kebutuhan Non-Fungsional
 10.1 Usability
 
@@ -164,13 +217,17 @@ Website harus memiliki tampilan yang sederhana, jelas, dan mudah digunakan oleh 
 
 10.2 Performance
 
-Website harus dapat menampilkan halaman dan data dalam waktu yang wajar sehingga pengguna tidak mengalami gangguan saat menggunakan sistem.
+Halaman utama dan halaman listing harus dapat dimuat dalam waktu kurang dari 3 detik pada koneksi internet normal sehingga pengguna tidak mengalami gangguan saat menggunakan sistem.
 
 10.3 Security
 
-Password pengguna harus disimpan secara aman.
+Password pengguna harus disimpan dalam bentuk hash, bukan plain text.
 
-Pengguna hanya dapat mengakses fitur sesuai dengan hak aksesnya.
+Setiap form harus dilindungi token CSRF.
+
+Upload foto/bukti pembayaran harus divalidasi: tipe file (MIME), ukuran maksimal 2MB, dan disimpan dengan nama acak.
+
+Pengguna hanya dapat mengakses fitur sesuai dengan hak aksesnya (role gate).
 
 Data pengguna harus dilindungi dari akses yang tidak sah.
 
@@ -178,87 +235,194 @@ Data pengguna harus dilindungi dari akses yang tidak sah.
 
 Website harus dapat digunakan pada berbagai ukuran layar, termasuk:
 
-Desktop.
+360px (smartphone).
 
-Laptop.
+768px (tablet).
 
-Tablet.
+1024px (laptop/desktop).
 
-Smartphone.
+Desktop dan laptop besar.
 
 10.5 Availability
 
 Website diharapkan dapat diakses selama server atau hosting dalam kondisi aktif.
 
 11. Alur Sistem
-11.1 Alur Pembeli
-Buka Website
-     ↓
+11.1 Alur Buyer
+Lihat Katalog
+      ↓
+Melihat Detail Listing
+      ↓
 Login / Registrasi
-     ↓
-Melihat Daftar Produk
-     ↓
-Mencari / Memilih Produk
-     ↓
-Melihat Detail Produk
-     ↓
-Menghubungi Penjual
-     ↓
-Melakukan Kesepakatan Transaksi
+      ↓
+Buat Order (pilih paket / deal penawaran)
+      ↓
+Menerima Instruksi Bayar
+      ↓
+Upload Bukti Pembayaran
+      ↓
+Order Diverifikasi & Diproses Seller
+      ↓
+Order Selesai
+      ↓
+Beri Review & Rating
 
-11.2 Alur Penjual
-Login
+11.2 Alur Seller
+Daftar Akun
   ↓
-Membuka Dashboard
+Ajukan Jadi Seller (isi profil toko)
   ↓
-Tambah Produk
+Menunggu Approval Admin
   ↓
-Mengisi Informasi Barang
+Posting Listing / Paket Jasa
   ↓
-Upload Foto
+Menerima Order atau Brief Custom
   ↓
-Publikasikan Produk
+Memberi Penawaran (jika custom brief)
   ↓
-Menerima Pesan dari Pembeli
+Mengerjakan Pesanan
   ↓
-Melakukan Kesepakatan Transaksi
+Order Selesai
 
 11.3 Alur Admin
 Login Admin
-     ↓
+      ↓
 Dashboard Admin
-     ↓
-Mengelola Pengguna / Produk
-     ↓
-Melakukan Moderasi
-     ↓
+      ↓
+Approve Pengajuan Seller
+      ↓
+Verifikasi Bukti Pembayaran
+      ↓
+Moderasi Listing
+      ↓
+Kelola User / Order / Kategori
+      ↓
 Data Diperbarui
 
 12. Data yang Dibutuhkan
-12.1 Data Pengguna
+12.1 Data Pengguna (users)
 Field	Deskripsi
 user_id	ID unik pengguna
 name	Nama pengguna
 email	Email pengguna
-password	Password pengguna
+username	Username pengguna
+password	Password pengguna (hash)
 phone	Nomor telepon
-address	Alamat pengguna
-role	Role pengguna
-12.2 Data Produk
-Field	Deskripsi
-product_id	ID unik produk
-seller_id	ID pemilik produk
-name	Nama produk
-description	Deskripsi produk
-category	Kategori produk
-condition	Kondisi barang
-price	Harga barang
-image	Foto produk
-status	Status produk
-created_at	Waktu produk dibuat
-13. Kategori Produk
+location	Lokasi pengguna
+avatar	Foto profil
+role	Role pengguna (guest/buyer/seller/admin)
+status	Status akun (active/inactive)
 
-Website dapat menyediakan beberapa kategori barang:
+12.2 Data Profil Seller (seller_profiles)
+Field	Deskripsi
+seller_id	ID unik profil seller
+user_id	ID pemilik (users)
+store_name	Nama toko
+deskripsi	Deskripsi toko/layanan
+approval	Status persetujuan admin (pending/approved/rejected)
+rekening_info	Rekening bank / e-wallet untuk penerimaan pembayaran
+created_at	Waktu profil dibuat
+
+12.3 Data Listing (listings)
+Field	Deskripsi
+listing_id	ID unik listing
+seller_id	ID pemilik listing (users)
+type	Tipe listing: product atau service
+title	Judul listing
+description	Deskripsi listing
+category_id	ID kategori
+price	Harga
+condition	Kondisi (khusus tipe product)
+location	Lokasi
+status	Status listing (tersedia/terjual/nonaktif)
+moderation	Status moderasi (menunggu/disetujui/ditolak)
+created_at	Waktu listing dibuat
+
+12.4 Data Paket Jasa (listing_packages)
+Field	Deskripsi
+package_id	ID unik paket
+listing_id	ID listing jasa terkait
+name	Nama paket (Basic/Pro/Enterprise)
+price	Harga paket
+duration_days	Durasi pengerjaan (hari)
+revisions	Jumlah revisi yang diberikan
+features	Daftar fitur paket
+
+12.5 Data Gambar Listing & Kategori
+Field	Deskripsi
+listing_images: image_id, listing_id, image_url, is_primary	Gambar listing (wajib minimal 1 untuk tipe product)
+categories: category_id, name, type	Kategori jasa web dan produk
+
+12.6 Data Brief (briefs)
+Field	Deskripsi
+brief_id	ID unik brief
+buyer_id	ID pembeli pengirim brief
+seller_id	ID seller yang dituju
+listing_id	ID listing jasa terkait
+kebutuhan	Deskripsi kebutuhan website
+budget	Perkiraan budget
+deadline	Deadline yang diharapkan
+penawaran	Harga dan durasi penawaran seller
+status	Status brief (dikirim/diberi penawaran/deal/ditolak)
+created_at	Waktu brief dikirim
+
+12.7 Data Order (orders)
+Field	Deskripsi
+order_code	Kode order unik
+buyer_id	ID pembeli
+seller_id	ID penjual
+listing_id	ID listing yang dipesan
+package_id	ID paket yang dipilih (opsional)
+total	Total tagihan
+payment_proof	Bukti pembayaran yang diunggah
+status	Status order (menunggu_bukti/diverifikasi/proses/selesai/batal)
+created_at	Waktu order dibuat
+
+12.8 Data Review (reviews)
+Field	Deskripsi
+review_id	ID unik review
+order_id	ID order yang direview
+buyer_id	ID pembeli pemberi review
+seller_id	ID seller penerima review
+rating	Rating bintang (1–5)
+comment	Komentar review
+created_at	Waktu review dibuat
+
+12.9 Data Favorit & Laporan
+Field	Deskripsi
+favorites: user_id, listing_id, created_at	Listing yang disimpan pengguna
+reports: report_id, user_id, listing_id, reason, status, created_at	Laporan listing dari pengguna
+
+12.10 Relasi Data
+
+1:N users → listings (satu user dapat memiliki banyak listing).
+
+1:N users → orders sebagai buyer (satu user dapat membuat banyak order).
+
+1:N listings → listing_packages (satu listing jasa dapat memiliki banyak paket).
+
+1:N listings → listing_images (satu listing dapat memiliki banyak gambar).
+
+1:N listings → orders (satu listing dapat menerima banyak order).
+
+1:N orders → reviews (satu order hanya dapat direview satu kali).
+
+N:N users ↔ listings melalui favorites (favorit).
+
+1:N categories → listings (satu kategori berisi banyak listing).
+
+13. Kategori
+13.1 Kategori Jasa Web
+
+Landing Page
+
+Company Profile
+
+Toko Online
+
+Custom App/Bot
+
+13.2 Kategori Produk
 
 Elektronik
 
@@ -266,7 +430,7 @@ Fashion
 
 Buku
 
-Furniture
+Furnitur
 
 Peralatan Rumah Tangga
 
@@ -280,44 +444,64 @@ Lainnya
 
 14. Kondisi Barang
 
-Penjual wajib memberikan informasi kondisi barang. Contoh kategori kondisi:
+Untuk listing bertipe produk, penjual wajib memberikan informasi kondisi barang. Listing bertipe jasa tidak memerlukan kondisi. Contoh kategori kondisi:
 
 Kondisi	Deskripsi
 Baru	Barang belum pernah digunakan
 Seperti Baru	Pernah digunakan tetapi masih dalam kondisi sangat baik
 Bekas - Baik	Barang memiliki sedikit tanda penggunaan
 Bekas - Cukup	Barang masih dapat digunakan tetapi memiliki beberapa kekurangan
+
 15. Business Rules
 
-Pengguna harus memiliki akun untuk dapat menjual barang.
+Satu email hanya dapat digunakan oleh satu akun dan password disimpan dalam bentuk hash.
 
-Setiap produk harus memiliki nama, harga, kategori, kondisi, dan deskripsi.
+Pengguna harus memiliki akun untuk membeli, menjual, menyimpan favorit, dan memberikan review.
 
-Penjual harus memberikan informasi barang sesuai dengan kondisi sebenarnya.
+Pengajuan menjadi seller harus disetujui admin sebelum seller dapat memposting listing.
 
-Penjual dapat mengubah atau menghapus produk miliknya.
+Seller hanya boleh mengedit dan menghapus listing miliknya sendiri.
 
-Produk yang sudah terjual dapat diubah statusnya menjadi Terjual.
+Listing harus melewati proses moderasi admin sebelum tampil kepada publik.
 
-Produk yang berstatus Terjual tidak dapat dibeli oleh pengguna lain.
+Setiap listing harus memiliki judul, harga, kategori, dan deskripsi.
 
-Admin dapat menghapus produk yang melanggar aturan website.
+Harga listing harus berupa angka positif.
 
-Admin dapat mengelola data pengguna.
+Listing bertipe produk wajib memiliki minimal satu foto.
 
-Pengguna tidak diperbolehkan menjual barang yang dilarang oleh peraturan website.
+Listing bertipe service wajib memiliki minimal satu paket jasa atau penawaran custom.
+
+Order untuk listing yang berstatus terjual tidak dapat menerima order baru.
+
+Order hanya dapat dibuat oleh buyer yang sudah login dan menampilkan instruksi bayar yang jelas.
+
+Bukti pembayaran wajib diunggah sebelum order dapat diverifikasi.
+
+Review dan rating hanya dapat diberikan buyer setelah order berstatus selesai.
+
+Admin/seller dapat menolak bukti pembayaran yang tidak sesuai dan membatalkan order.
+
+Admin dapat memoderasi listing, menyetujui/menolak pengajuan seller, dan mengelola data pengguna.
+
+Pengguna tidak diperbolehkan menjual jasa atau produk yang dilarang oleh peraturan website.
 
 16. Hak Akses Pengguna
-Fitur	Pembeli	Penjual	Admin
-Melihat Produk	✅	✅	✅
-Mencari Produk	✅	✅	✅
-Melihat Detail Produk	✅	✅	✅
-Membuat Produk	❌	✅	✅
-Edit Produk Sendiri	❌	✅	✅
-Hapus Produk Sendiri	❌	✅	✅
-Menghubungi Penjual	✅	✅	✅
-Mengelola Pengguna	❌	❌	✅
-Mengelola Semua Produk	❌	❌	✅
+Fitur	Guest	Buyer	Seller	Admin
+Melihat katalog	✅	✅	✅	✅
+Pencarian & filter	✅	✅	✅	✅
+Melihat detail listing	✅	✅	✅	✅
+Membuat order & upload bukti	❌	✅	✅	✅
+Favorit & review	❌	✅	✅	✅
+Ajukan jadi seller	❌	✅	❌	❌
+Membuat listing	❌	❌	✅	❌
+Edit/hapus listing sendiri	❌	❌	✅	❌
+Membuat paket jasa & menjawab brief	❌	❌	✅	❌
+Memverifikasi pembayaran	❌	❌	✅	✅
+Approval seller	❌	❌	❌	✅
+Moderasi listing	❌	❌	❌	✅
+Mengelola user/order/kategori	❌	❌	❌	✅
+
 17. Halaman Website
 
 Website direncanakan memiliki beberapa halaman utama:
@@ -326,63 +510,100 @@ Public
 
 /
 
-/products
+/listings
 
-/products/:id
+/listings/:id
 
 /login
 
 /register
 
-User
+/contact
+
+User (Buyer)
 
 /profile
 
-/my-products
+/orders
 
-/products/create
+/orders/:code
 
-/products/:id/edit
+/checkout/:code (instruksi bayar & upload bukti)
+
+/briefs (buat brief & brief saya)
+
+/favorites
+
+Seller
+
+/my-listings
+
+/listings/create
+
+/listings/:id/edit
+
+/briefs (memberi penawaran)
+
+/seller (dashboard seller)
 
 Admin
 
 /admin
 
+/admin/sellers (approval seller)
+
+/admin/listings (moderasi listing)
+
 /admin/users
 
-/admin/products
+/admin/orders
+
+/admin/categories
 
 18. Indikator Keberhasilan
 
 Proyek dianggap berhasil apabila:
 
-Pengguna dapat melakukan registrasi dan login.
+Pengguna dapat melakukan registrasi, login, dan logout.
 
-Pengguna dapat melihat daftar barang.
+Pengguna dapat mengajukan diri menjadi seller dan menunggu approval admin.
 
-Pengguna dapat mencari barang.
+Katalog menampilkan listing jasa web dan produk.
 
-Pengguna dapat melihat detail barang.
+Pengguna dapat mencari dan memfilter listing berdasarkan kategori.
 
-Penjual dapat menambahkan barang.
+Pengguna dapat melihat detail listing.
 
-Penjual dapat mengedit dan menghapus barang.
+Seller dapat menambah, mengedit, dan menghapus listing miliknya.
 
-Pembeli dapat menghubungi penjual.
+Seller dapat membuat paket jasa berjenjang.
 
-Admin dapat mengelola pengguna.
+Buyer dapat mengirim brief custom dan menerima penawaran seller.
 
-Admin dapat mengelola produk.
+Buyer dapat membuat order, melihat instruksi bayar, dan mengunggah bukti pembayaran.
 
-Website dapat digunakan dengan baik melalui desktop dan smartphone.
+Admin/seller dapat memverifikasi pembayaran dan status order berjalan sesuai alur.
+
+Buyer dapat memberikan review dan rating bintang setelah order selesai.
+
+Pembeli dapat menghubungi penjual via WhatsApp.
+
+Admin dapat menyetujui pengajuan seller dan memoderasi listing.
+
+Admin dapat mengelola pengguna, order, dan kategori.
+
+Website dapat digunakan dengan baik melalui desktop dan smartphone serta tetap responsif pada lebar 360px, 768px, dan 1024px.
 
 19. Risiko Proyek
 Risiko	Dampak	Mitigasi
-Data produk tidak sesuai	Pembeli mendapatkan informasi yang salah	Menyediakan fitur laporan/moderasi
-Penyalahgunaan akun	Data pengguna dapat disalahgunakan	Menggunakan autentikasi dan validasi
-Produk ilegal/dilarang	Masalah keamanan dan aturan	Moderasi oleh admin
+Listing tidak sesuai/menyesatkan	Pembeli mendapatkan informasi yang salah	Moderasi listing dan fitur laporan
+Penyalahgunaan akun seller	Data pengguna dan platform disalahgunakan	Persetujuan seller oleh admin serta autentikasi dan validasi
+Jasa/produk ilegal atau dilarang	Masalah keamanan dan pelanggaran aturan	Moderasi oleh admin
+Bukti pembayaran palsu	Pesanan diproses tanpa pembayaran	Verifikasi bukti oleh admin/seller dan pencocokan nominal
+Transaksi manual tidak jelas	Kekecewaan buyer karena status order membingungkan	Status order dan instruksi bayar yang jelas
 Server mengalami gangguan	Website tidak dapat diakses	Menggunakan hosting yang sesuai
-Foto produk terlalu besar	Website menjadi lambat	Membatasi ukuran dan mengoptimalkan gambar
+Foto/bukti terlalu besar	Website menjadi lambat	Membatasi ukuran unggahan (maks 2MB) dan mengoptimalkan gambar
+
 20. Prioritas Pengembangan
 Phase 1 — Core
 
@@ -390,70 +611,93 @@ Registrasi
 
 Login
 
-Daftar produk
-
-Detail produk
-
-Tambah produk
-
-Edit produk
-
-Hapus produk
-
-Phase 2 — Improvement
-
-Search
-
-Filter kategori
+Logout
 
 Profil pengguna
 
-Status produk
+Katalog listing
 
-Kontak penjual
+Detail listing
 
-Phase 3 — Admin
+Pencarian dan filter kategori
+
+CRUD listing (seller)
+
+Approval seller oleh admin
+
+Phase 2 — Fitur Jasa Web
+
+Paket jasa berjenjang
+
+Custom brief dan penawaran
+
+Kontak penjual via WhatsApp
+
+Favorit
+
+Phase 3 — Transaksi Manual
+
+Buat order
+
+Instruksi bayar
+
+Upload bukti pembayaran
+
+Verifikasi pembayaran
+
+Status order
+
+Review dan rating
+
+Phase 4 — Dashboard & Admin
+
+Dashboard buyer
+
+Dashboard seller
 
 Dashboard admin
 
-Manajemen pengguna
+Verifikasi pembayaran oleh admin
 
-Manajemen produk
+Moderasi listing
 
-Moderasi produk
+Manajemen pengguna, order, dan kategori
 
 21. Future Development
 
 Fitur yang dapat dikembangkan pada versi berikutnya:
 
-Sistem pembayaran online.
+Payment gateway otomatis.
 
-Integrasi payment gateway.
+Checkout dan pembayaran online otomatis.
+
+Payout otomatis ke rekening seller.
 
 Sistem chat real-time.
 
-Sistem rating dan review.
+Sistem notifikasi.
 
-Wishlist.
+Integrasi jasa ekspedisi.
 
-Notifikasi.
+Tracking pengiriman otomatis.
 
-Integrasi jasa pengiriman.
-
-Tracking pesanan.
-
-Sistem rekomendasi produk.
+Sistem rekomendasi berbasis AI.
 
 Aplikasi mobile.
 
+Sistem lelang (auction).
+
+Verifikasi identitas pengguna.
+
 22. Kesimpulan
 
-Website jual beli barang bekas ini dibuat untuk menyediakan platform yang sederhana dan mudah digunakan bagi pengguna yang ingin menjual maupun mencari barang bekas.
+SESSIONS — Marketplace Jasa Web & Produk dibuat untuk menyediakan platform yang sederhana dan mudah digunakan bagi pengguna yang ingin menjual maupun membeli jasa pembuatan website dan produk.
 
-Sistem akan menyediakan fitur utama seperti registrasi, login, manajemen produk, pencarian barang, kategori, detail produk, serta komunikasi antara pembeli dan penjual.
+Sistem akan menyediakan fitur utama seperti registrasi, login, approval seller, katalog listing, pencarian dan kategori, detail listing, paket jasa, custom brief, order manual dengan upload bukti pembayaran, kontak penjual via WhatsApp, favorit, review dan rating, serta dashboard bagi buyer, seller, dan admin.
 
-Dengan adanya website ini, diharapkan proses jual beli barang bekas menjadi lebih mudah, praktis, dan terorganisir.
+Dengan adanya website ini, diharapkan proses jual beli jasa web dan produk menjadi lebih mudah, praktis, transparan, dan terorganisir.
 
 23. Status Dokumen
 Versi	Tanggal	Status	Keterangan
 1.0	2026-09-29	Draft	Dokumen awal kebutuhan proyek
+1.1	2026-09-29	Revisi — disesuaikan dengan visi marketplace jasa web & produk multi-seller	Revisi menyeluruh: judul, ruang lingkup, FR, data, alur sistem, hak akses, dan sitemap
