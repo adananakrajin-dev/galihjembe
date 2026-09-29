@@ -1,0 +1,32 @@
+# ── Kredensial & konfigurasi (RAHASIA) ──
+.env
+.env.*
+config.local.php
+database.php
+
+# ── Data runtime / unggahan pengguna ──
+uploads/
+*.sql
+*.sqlite
+*.db
+backups/
+
+# ── Log & session ──
+*.log
+logs/
+tmp/
+sessions/
+
+# ── Backup editor / OS ──
+*.bak
+*.tmp
+Thumbs.db
+.DS_Store
+desktop.ini
+.idea/
+.vscode/
+*.swp
+
+# ── Dependensi (untuk perkembangan berikutnya) ──
+node_modules/
+vendor/
