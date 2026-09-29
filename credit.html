@@ -4,493 +4,140 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SESSIONS | Credits & Licensing</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <style>
-        /* ── RESET & PREMIUM OBSIDIAN THEME ── */
-        * /* ── RESET & PREMIUM OBSIDIAN THEME ── */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body, html {
-            height: 100%;
-            overflow-x: hidden;
-            background-color: #050505;
-            background-image: radial-gradient(circle at 50% 0%, #151c2c 0%, #050505 70%);
-            background-attachment: fixed;
-            color: #ffffff;
-        }
-
-        /* ── CURSOR SPOTLIGHT ── */
-        .cursor-spotlight {
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 70%);
-            transition: opacity 0.4s ease;
-            opacity: 0;
-        }
-
-        /* ── PARTICLE CANVAS ── */
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* ── SHIMMER SCAN LINE ── */
-        .shimmer-line {
-            position: fixed;
-            top: -2px;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 60%, transparent 100%);
-            pointer-events: none;
-            z-index: 1;
-            animation: shimmerScan 7s ease-in-out infinite;
-            opacity: 0;
-        }
-
-        @keyframes shimmerScan {
-            0%   { top: -2px; opacity: 0; }
-            5%   { opacity: 1; }
-            95%  { opacity: 1; }
-            100% { top: 100vh; opacity: 0; }
-        }
-         /* ── SOLID NATURAL NAVBAR (Fix Turun-Turun) ── */
-        /* ── TRANSPARENT OVERLAY NAVBAR ── */
-        nav {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 25px 4%; /* Padding disamain persis kaya index */
-            background: transparent;
-            width: 100%;
-            /* Absolute dibuang biar dia jadi struktur solid yang gak bakal lompat/geser */
-            animation: fadeDownModern 1s ease-out both;
-        }
-
-        /* Nav Brand (SESSIONS) 100% Konsisten sama Index */
-        .nav-brand {
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
-            letter-spacing: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .nav-brand:hover {
-            opacity: 0.7;
-        }
-
-        /* ── CONTENT WRAPPER ── */
-        .credit-wrapper {
-            max-width: 850px;
-            margin: 120px auto 60px;
-            padding: 0 20px;
-        }
-
-        .header-section {
-            text-align: center;
-            margin-bottom: 60px;
-            animation: fadeUpModern 1s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        /* SILVER GRADIENT EFFECT */
-        .header-section h1 { 
-            font-size: 42px; 
-            font-weight: 600; 
-            letter-spacing: 2px;
-            margin-bottom: 12px; 
-            background: linear-gradient(135deg, #ffffff 0%, #b3b3b3 50%, #ffffff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .header-section p { 
-            color: rgba(255, 255, 255, 0.5); 
-            font-size: 14px; 
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        /* ── ULTRA-CLEAN GLASS CARDS ── */
-        .legal-card {
-            background: rgba(20, 22, 28, 0.4);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-top: 1px solid rgba(255, 255, 255, 0.08); 
-            padding: 40px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-            opacity: 0;
-            transform: translateY(20px);
-            animation: scaleInModern 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .legal-card:nth-child(2) { animation-delay: 0.2s; }
-        .legal-card:nth-child(3) { animation-delay: 0.4s; }
-
-        .legal-card h3 { 
-            font-size: 16px; 
-            font-weight: 500;
-            color: #ffffff; 
-            margin-bottom: 20px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .legal-card h3 i {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .legal-text {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-            font-weight: 300;
-            text-align: justify;
-            line-height: 1.8;
-        }
-
-        .highlight { 
-            color: #ffffff; 
-            font-weight: 500; 
-        }
-
-        /* ── TECH STACK BADGES ── */
-        .badge-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-top: 24px;
-        }
-
-        .badge {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.4s ease;
-        }
-
-        .badge:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-4px);
-        }
-
-        .badge i { 
-            font-size: 24px; 
-            margin-bottom: 12px; 
-            color: rgba(255, 255, 255, 0.8); 
-            transition: transform 0.4s ease;
-        }
-
-        .badge:hover i {
-            transform: scale(1.1);
-            color: #ffffff;
-        }
-
-        .badge p { 
-            font-size: 12px; 
-            font-weight: 400; 
-            color: rgba(255, 255, 255, 0.7);
-            letter-spacing: 0.5px;
-        }
-
-        /* ── CINEMATIC CREDITS ── */
-        .cinematic-credits {
-            display: flex;
-            justify-content: space-around;
-            text-align: center;
-            flex-wrap: wrap;
-            gap: 30px;
-            margin-top: 40px;
-            padding-top: 40px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .credit-block span {
-            display: block;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.4);
-            margin-bottom: 8px;
-        }
-
-        .credit-block h4 {
-            font-size: 15px;
-            font-weight: 500;
-            color: #ffffff;
-            letter-spacing: 1px;
-            background: linear-gradient(135deg, #ffffff 0%, #b3b3b3 50%, #ffffff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* ── FOOTER ── */
-        footer { 
-            text-align: center; 
-            padding: 40px; 
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 10px; 
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-top: auto;
-        }
-
-        /* ── ANIMATIONS ── */
-        @keyframes fadeUpModern {
-            from { opacity: 0; transform: translateY(30px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes scaleInModern {
-            to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        /* ── RESPONSIVE / MOBILE OPTIMIZATION ── */
-        @media (max-width: 768px) {
-            .credit-wrapper {
-                margin: 90px auto 40px;
-            }
-            .header-section h1 { font-size: 32px; }
-            .legal-card { padding: 30px 20px; }
-            .legal-text { text-align: left; } 
-        }
-
-        @media (max-width: 480px) {
-            .header-section h1 { font-size: 28px; }
-            .header-section p { font-size: 12px; }
-            .badge-grid { grid-template-columns: 1fr; }
-            .cinematic-credits { flex-direction: column; gap: 24px; padding-top: 30px; }
-            nav { padding: 20px; }
-        }
-    </style>
+    <meta name="description" content="Credits, technology stack, dan acknowledgments dari SESSIONS — Premium Web Creation Service.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
-     <!-- Cursor Spotlight -->
-    <div class="cursor-spotlight" id="cursorSpotlight"></div>
+<header class="site-nav">
+    <div class="container nav-inner">
+        <a href="index.php" class="brand">SESS<span>IONS</span></a>
 
-    <!-- Particle Canvas -->
-    <canvas id="particle-canvas"></canvas>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="index.php">Beranda</a></li>
+            <li><a href="contact.html">Kontak</a></li>
+            <li class="only-mobile"><a href="login.php">Masuk</a></li>
+            <li class="only-mobile"><a href="register.php">Daftar</a></li>
+        </ul>
 
-    <!-- Shimmer Scan Line -->
-    <div class="shimmer-line"></div>
+        <div class="nav-actions">
+            <a href="login.php" class="btn btn-ghost btn-sm">Masuk</a>
+            <a href="register.php" class="btn btn-primary btn-sm">Daftar</a>
+        </div>
 
-    <nav>
-        <a href="index.html" class="nav-brand">SESSIONS</a>
-    </nav>
+        <button class="nav-toggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="navLinks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 7h16M4 12h16M4 17h16"/>
+            </svg>
+        </button>
+    </div>
+</header>
 
-    <div class="credit-wrapper">
-        <div class="header-section">
+<main>
+
+    <div class="page-head">
+        <div class="container">
             <h1>CREDITS</h1>
-            <p>Acknowledgments & Licensing</p>
-        </div>
-
-        <div class="legal-card">
-            <h3><i class="fa-regular fa-copyright"></i> Copyright Notice</h3>
-            <p class="legal-text">
-                Seluruh materi visual, struktur kode, dan desain antarmuka dalam platform ini adalah hak cipta eksklusif milik <span class="highlight">SESSIONS</span>. Dirancang secara profesional sebagai representasi layanan pembuatan web kelas atas (Premium Web Creation Service). Penggunaan, modifikasi, reproduksi, atau distribusi aset tanpa izin tertulis dilarang keras.
-            </p>
-        </div>
-
-        <div class="legal-card">
-            <h3><i class="fa-solid fa-microchip"></i> Technology Stack</h3>
-            <div class="badge-grid">
-                <div class="badge">
-                    <i class="fa-brands fa-html5"></i>
-                    <p>HTML5 Modern</p>
-                </div>
-                <div class="badge">
-                    <i class="fa-brands fa-css3-alt"></i>
-                    <p>CSS3 Glassmorphism</p>
-                </div>
-                <div class="badge">
-                    <i class="fa-brands fa-js"></i>
-                    <p>Vanilla JS</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="legal-card">
-            <h3><i class="fa-regular fa-star"></i> Acknowledgments</h3>
-            <p class="legal-text" style="text-align: center; margin-bottom: 20px;">
-                Dedikasi penuh kami berikan kepada seluruh tim kreatif, mitra strategis, dan klien visioner yang telah mempercayakan kehadiran digital mereka kepada kami. <span class="highlight">SESSIONS</span> terus berkomitmen untuk mendorong batasan inovasi dalam dunia pengembangan web.
-            </p>
-            
-            <div class="cinematic-credits">
-                <div class="credit-block">
-                    <span>Designed & Developed By</span>
-                    <h4>SESSIONS TEAM</h4>
-                </div>
-                <div class="credit-block">
-                    <span>Vision & Strategy</span>
-                    <h4>THE FOUNDERS</h4>
-                </div>
-                <div class="credit-block">
-                    <span>Powered By</span>
-                    <h4>INNOVATION</h4>
-                </div>
-            </div>
+            <p>Acknowledgments &amp; Licensing</p>
         </div>
     </div>
 
-    <footer>
-        &copy; 2026 SESSIONS. All Rights Reserved.
-    </footer>
+    <section class="section">
+        <div class="container">
 
-    <script>
-        /* ── 1. CURSOR SPOTLIGHT ── */
-        const spotlight = document.getElementById('cursorSpotlight');
-        let spotX = window.innerWidth / 2, spotY = window.innerHeight / 2;
-        let currentX = spotX, currentY = spotY;
-        let spotVisible = false;
+            <!-- Copyright Notice -->
+            <div class="panel">
+                <div class="feature">
+                    <span class="mi-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M15 9.6a3.6 3.6 0 1 0 0 4.8"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 class="mi-title">Copyright Notice</h3>
+                    </div>
+                </div>
+                <p class="mt-2">Seluruh materi visual, struktur kode, dan desain antarmuka dalam platform ini adalah hak cipta
+                    eksklusif milik <strong>SESSIONS</strong>. Dirancang secara profesional sebagai representasi layanan
+                    pembuatan web kelas atas (Premium Web Creation Service). Penggunaan, modifikasi, reproduksi, atau
+                    distribusi aset tanpa izin tertulis dilarang keras.</p>
+            </div>
 
-        document.addEventListener('mousemove', (e) => {
-            spotX = e.clientX;
-            spotY = e.clientY;
-            if (!spotVisible) {
-                spotlight.style.opacity = '1';
-                spotVisible = true;
-            }
-        });
+            <!-- Technology Stack -->
+            <div class="panel mt-3">
+                <div class="feature">
+                    <span class="mi-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="7" y="7" width="10" height="10" rx="1.5"/>
+                            <rect x="4" y="4" width="16" height="16" rx="3"/>
+                            <path d="M9 1.5v2.5M15 1.5v2.5M9 20v2.5M15 20v2.5M1.5 9H4M1.5 15H4M20 9h2.5M20 15h2.5"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 class="mi-title">Technology Stack</h3>
+                    </div>
+                </div>
 
-        document.addEventListener('mouseleave', () => {
-            spotlight.style.opacity = '0';
-            spotVisible = false;
-        });
+                <div class="chips mt-2">
+                    <span class="chip">HTML5 Modern</span>
+                    <span class="chip">CSS3 Glassmorphism</span>
+                    <span class="chip">Vanilla JS</span>
+                </div>
+            </div>
 
-        function animateSpotlight() {
-            currentX += (spotX - currentX) * 0.07;
-            currentY += (spotY - currentY) * 0.07;
-            spotlight.style.left = currentX + 'px';
-            spotlight.style.top = currentY + 'px';
-            requestAnimationFrame(animateSpotlight);
-        }
-        animateSpotlight();
+            <!-- Acknowledgments -->
+            <div class="panel mt-3">
+                <div class="feature">
+                    <span class="mi-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.7 6.6 19.9l1-6.1L3.2 9.5l6.1-.9L12 3z"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 class="mi-title">Acknowledgments</h3>
+                    </div>
+                </div>
 
-        /* ── 2. AMBIENT PARTICLES ── */
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
+                <p class="mt-2">Dedikasi penuh kami berikan kepada seluruh tim kreatif, mitra strategis, dan klien visioner yang
+                    telah mempercayakan kehadiran digital mereka kepada kami. <strong>SESSIONS</strong> terus berkomitmen
+                    untuk mendorong batasan inovasi dalam dunia pengembangan web.</p>
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+                <div class="stats mt-3">
+                    <div class="stat center">
+                        <div class="stat-value">SESSIONS TEAM</div>
+                        <div class="stat-label">Designed &amp; Developed By</div>
+                    </div>
+                    <div class="stat center">
+                        <div class="stat-value">THE FOUNDERS</div>
+                        <div class="stat-label">Vision &amp; Strategy</div>
+                    </div>
+                    <div class="stat center">
+                        <div class="stat-value">INNOVATION</div>
+                        <div class="stat-label">Powered By</div>
+                    </div>
+                </div>
+            </div>
 
-        const particles = [];
-        const PARTICLE_COUNT = 55;
+        </div>
+    </section>
 
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            particles.push({
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-                r: Math.random() * 1.2 + 0.3,
-                alpha: Math.random() * 0.35 + 0.05,
-                vx: (Math.random() - 0.5) * 0.18,
-                vy: (Math.random() - 0.5) * 0.18,
-                pulse: Math.random() * Math.PI * 2,
-                pulseSpeed: Math.random() * 0.012 + 0.006
-            });
-        }
+</main>
 
-        function drawParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.pulse += p.pulseSpeed;
+<footer class="site-footer">
+    <div class="container footer-inner">
+        <span>&copy; 2026 SESSIONS. All Rights Reserved.</span>
+        <nav>
+            <a href="index.php">Beranda</a>
+            <a href="contact.html">Kontak</a>
+            <a href="login.php">Masuk</a>
+        </nav>
+    </div>
+</footer>
 
-                if (p.x < -5) p.x = canvas.width + 5;
-                if (p.x > canvas.width + 5) p.x = -5;
-                if (p.y < -5) p.y = canvas.height + 5;
-                if (p.y > canvas.height + 5) p.y = -5;
-
-                const dynamicAlpha = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
-
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${dynamicAlpha})`;
-                ctx.fill();
-            });
-            requestAnimationFrame(drawParticles);
-        }
-        drawParticles();
-
-        /* ── 3. MAGNETIC ICON pada stat-box ── */
-        document.querySelectorAll('.stat-box').forEach(box => {
-            const icon = box.querySelector('i');
-
-            box.addEventListener('mousemove', (e) => {
-                const rect = box.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                const dx = (e.clientX - cx) * 0.28;
-                const dy = (e.clientY - cy) * 0.28;
-                if (icon) icon.style.transform = `translate(${dx}px, ${dy}px) scale(1.15)`;
-            });
-            box.addEventListener('mouseleave', () => {
-                if (icon) icon.style.transform = 'translate(0, 0) scale(1)';
-            });
-        });
-
-        /* ── 4. CHARACTER REVEAL pada H1 ── */
-        const heroTitle = document.getElementById('heroTitle');
-        const titleText = heroTitle.textContent;
-        heroTitle.textContent = '';
-
-        titleText.split('').forEach((char, i) => {
-            const span = document.createElement('span');
-            span.classList.add('char');
-            span.textContent = char === ' ' ? '\u00A0' : char;
-            span.style.animationDelay = (0.4 + i * 0.07) + 's';
-            heroTitle.appendChild(span);
-        });
-
-        /* ── 5. TYPEWRITER pada SUBTITLE ── */
-        const subtitleEl = document.getElementById('subtitle');
-        const subtitleText = 'Accelerating the World\'s Transition to High-End Digital Presence';
-        let charIndex = 0;
-
-        function typeWriter() {
-            if (charIndex < subtitleText.length) {
-                subtitleEl.textContent += subtitleText[charIndex];
-                charIndex++;
-                setTimeout(typeWriter, 32);
-            } else {
-                subtitleEl.classList.add('done');
-            }
-        }
-
-        setTimeout(typeWriter, 1600);
-    </script>
-
-
+<script src="assets/js/main.js"></script>
 </body>
 </html>

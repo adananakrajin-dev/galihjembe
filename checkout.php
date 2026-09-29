@@ -1,886 +1,421 @@
 <?php
-session_start();
-if (!isset($_SESSION["username"])) {
-    $_SESSION["username"] = "Developer Handal";
+include 'database.php';
+include 'includes/functions.php';
+require_login();
+
+$error = '';
+$flash_after = '';
+
+// ── Mode pesanan nyata (?order=ID) ──
+$order = null;
+if (isset($_GET['order'])) {
+    $order_id = (int)$_GET['order'];
+    try {
+        $order = db_one($db, 'SELECT * FROM orders WHERE id = ? AND buyer_id = ?',
+            'ii', $order_id, (int)$_SESSION['user_id']);
+    } catch (Throwable $e) {}
+    if (!$order) {
+        set_flash('Pesanan tidak ditemukan.', 'danger');
+        header('Location: orders.php');
+        exit;
+    }
+    if ($order['status'] === 'batal') {
+        set_flash('Pesanan ini sudah dibatalkan.', 'info');
+        header('Location: orders.php');
+        exit;
+    }
 }
-$username = $_SESSION["username"];
 
-// Ambil data dari URL yang dikirim catalog
-$packageName  = isset($_GET['package']) ? htmlspecialchars($_GET['package']) : "Website Package";
-$packagePrice = isset($_GET['price'])   ? (int)$_GET['price']               : 0;
-$tax          = $packagePrice * 0.11;
-$totalPayment = $packagePrice + $tax;
+// ── Info pembayaran: dari tabel settings, fallback nilai default ──
+$pay = [
+    'wa'       => '6287867851779',
+    'qris'     => 'qr.jpeg',
+    'ewallet'  => ['number' => '0878-6785-1779', 'name' => 'SESSIONS STUDIO'],
+    'bank'     => [
+        'BCA' => ['number' => '1234567890', 'name' => 'a.n. Nama Kamu'],
+        'BNI' => ['number' => '0987654321', 'name' => 'a.n. Nama Kamu'],
+        'BRI' => ['number' => '1122334455', 'name' => 'a.n. Nama Kamu'],
+    ],
+];
+try {
+    foreach (db_all($db, 'SELECT `key`, `value` FROM settings') as $s) {
+        $k = $s['key'];
+        if ($k === 'payment_wa')           { $pay['wa'] = $s['value']; }
+        if ($k === 'payment_qris')         { $pay['qris'] = $s['value']; }
+        if ($k === 'payment_ewallet_num')  { $pay['ewallet']['number'] = $s['value']; }
+        if ($k === 'payment_ewallet_name') { $pay['ewallet']['name'] = $s['value']; }
+        if ($k === 'payment_bca')          { $pay['bank']['BCA']['number'] = $s['value']; }
+        if ($k === 'payment_bni')          { $pay['bank']['BNI']['number'] = $s['value']; }
+        if ($k === 'payment_bri')          { $pay['bank']['BRI']['number'] = $s['value']; }
+        if ($k === 'payment_bank_name') {
+            foreach ($pay['bank'] as $bk => $v) { $pay['bank'][$bk]['name'] = $s['value']; }
+        }
+    }
+} catch (Throwable $e) { /* tabel settings belum ada — pakai default */ }
 
-// ── GANTI INFO INI ──
-$waNumber   = "6287867851779";   // Nomor WA kamu (awalan 62)
-$qrisImg    = "qr.jpeg";        // Nama file foto QRIS kamu (taruh 1 folder sama file ini)
+$METHODS = ['QRIS', 'DANA', 'GOPAY', 'OVO', 'BCA', 'BNI', 'BRI'];
+
+// ── Simpan metode pembayaran ──
+if (isset($_POST['save_method'])) {
+    csrf_check();
+    $method = $_POST['method'] ?? '';
+    if (!$order) {
+        $error = 'Metode ini hanya bisa disimpan untuk pesanan dari katalog.';
+    } elseif (!in_array($method, $METHODS, true)) {
+        $error = 'Pilih metode pembayaran yang tersedia.';
+    } else {
+        $uid = (int)$_SESSION['user_id'];
+        $stmt = $db->prepare('UPDATE orders SET payment_method = ? WHERE id = ? AND buyer_id = ?');
+        $stmt->bind_param('sii', $method, $order['id'], $uid);
+        $stmt->execute();
+        $stmt->close();
+        set_flash('Metode pembayaran ' . $method . ' dipilih. Silakan transfer lalu upload bukti.', 'success');
+        header('Location: checkout.php?order=' . $order['id']);
+        exit;
+    }
+}
+
+// ── Upload bukti pembayaran ──
+if (isset($_POST['upload_proof'])) {
+    csrf_check();
+    if (!$order) {
+        $error = 'Upload bukti hanya untuk pesanan nyata dari katalog.';
+    } elseif (empty($order['payment_method'])) {
+        $error = 'Pilih metode pembayaran dulu sebelum upload bukti.';
+    } elseif (in_array($order['status'], ['diverifikasi', 'proses', 'selesai'], true)) {
+        $error = 'Pembayaran pesanan ini sudah diverifikasi.';
+    } else {
+        $up = handle_upload($_FILES['proof'] ?? [], 'proof');
+        if ($up['ok']) {
+            delete_upload($order['payment_proof'] ?? null);
+            $uid = (int)$_SESSION['user_id'];
+            $stmt = $db->prepare('UPDATE orders SET payment_proof = ? WHERE id = ? AND buyer_id = ?');
+            $stmt->bind_param('sii', $up['file'], $order['id'], $uid);
+            $stmt->execute();
+            $stmt->close();
+            set_flash('Bukti pembayaran terkirim! Menunggu verifikasi admin.', 'success');
+            header('Location: checkout.php?order=' . $order['id']);
+            exit;
+        }
+        $error = $up['error'];
+    }
+}
+
+// ── Data tampilan ──
+if ($order) {
+    $packageName  = $order['title'];
+    $totalPayment = (float)$order['total'];
+    $packagePrice = (int)round($totalPayment / 1.11);
+    $tax          = $totalPayment - $packagePrice;
+    $method       = $order['payment_method'] ?? '';
+    $proof        = $order['payment_proof'] ?? null;
+    $page_title   = 'Pembayaran — ' . $order['order_code'];
+} else {
+    $packageName  = trim($_GET['package'] ?? 'Website Package');
+    $packagePrice = max(0, (int)($_GET['price'] ?? 0));
+    $tax          = (int)round($packagePrice * 0.11);
+    $totalPayment = $packagePrice + $tax;
+    $method       = '';
+    $proof        = null;
+    $page_title   = 'Checkout';
+}
+$username = $_SESSION['username'] ?? '';
+
+include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHECKOUT | SESSIONS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        *  {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
 
-        body, html {
-            min-height: 100vh; /* Ganti height: 100% jadi min-height */
-            display: flex; /* Tambahin ini */
-            flex-direction: column; /* Tambahin ini */
-            overflow-x: hidden;
-            background-color: #050505;
-            background-image: radial-gradient(circle at 50% 0%, #151c2c 0%, #050505 70%);
-            background-attachment: fixed;
-            color: #ffffff;
-        }
-
-        /* ── CURSOR SPOTLIGHT ── */
-        .cursor-spotlight {
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 70%);
-            transition: opacity 0.4s ease;
-            opacity: 0;
-        }
-
-        /* ── PARTICLE CANVAS ── */
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* ── SHIMMER SCAN LINE ── */
-        .shimmer-line {
-            position: fixed;
-            top: -2px;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 60%, transparent 100%);
-            pointer-events: none;
-            z-index: 1;
-            animation: shimmerScan 7s ease-in-out infinite;
-            opacity: 0;
-        }
-
-        @keyframes shimmerScan {
-            0%   { top: -2px; opacity: 0; }
-            5%   { opacity: 1; }
-            95%  { opacity: 1; }
-            100% { top: 100vh; opacity: 0; }
-        }
-         /* ── SOLID NATURAL NAVBAR (Fix Turun-Turun) ── */
-        /* ── TRANSPARENT OVERLAY NAVBAR ── */
-        nav {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 25px 4%; /* Padding disamain persis kaya index */
-            background: transparent;
-            width: 100%;
-            /* Absolute dibuang biar dia jadi struktur solid yang gak bakal lompat/geser */
-            animation: fadeDownModern 1s ease-out both;
-        }
-
-        /* Nav Brand (SESSIONS) 100% Konsisten sama Index */
-        .nav-brand {
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
-            letter-spacing: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .nav-brand:hover {
-            opacity: 0.7;
-        }
-
-
-        /* ── LAYOUT ── */
-        .container {
-            max-width: 1060px;
-            width: 92%;
-            margin: 10px auto 70px;
-            display: grid;
-            grid-template-columns: 1.1fr 1fr;
-            gap: 28px;
-        }
-
-        /* ── CARD ── */
-        .card {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 18px;
-            padding: 28px;
-        }
-
-        .card-title {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-            margin-bottom: 22px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .card-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255,255,255,0.06);
-        }
-
-        /* ── ORDER SUMMARY ── */
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            color: rgba(255,255,255,0.55);
-            margin-bottom: 13px;
-        }
-        .summary-row.highlight { color: #fff; font-weight: 500; font-size: 15px; }
-        .summary-row.total {
-            border-top: 1px solid rgba(255,255,255,0.07);
-            padding-top: 16px;
-            margin-top: 6px;
-            font-size: 17px;
-            font-weight: 700;
-            color: #fff;
-        }
-        .summary-row.total span:last-child { color: #60a5fa; }
-        .pkg-badge {
-            font-size: 10px;
-            background: rgba(96,165,250,0.12);
-            color: #60a5fa;
-            border: 1px solid rgba(96,165,250,0.2);
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        .pkg-desc {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            line-height: 1.7;
-            margin-bottom: 22px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        /* ── PAYMENT METHODS ── */
-        .group-label {
-            font-size: 10px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.3);
-            font-weight: 600;
-            margin: 18px 0 10px;
-        }
-
-        .method-option {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            background: rgba(255,255,255,0.015);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 14px 16px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            user-select: none;
-        }
-        .method-option:hover {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.12);
-            transform: translateY(-1px);
-        }
-        .method-option.selected {
-            background: rgba(96,165,250,0.06);
-            border-color: #3b82f6;
-        }
-        .method-option input[type="radio"] { display: none; }
-
-        .radio-circle {
-            width: 17px; height: 17px;
-            border: 2px solid rgba(255,255,255,0.25);
-            border-radius: 50%;
-            flex-shrink: 0;
-            transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .method-option.selected .radio-circle {
-            border-color: #3b82f6;
-            background: #3b82f6;
-        }
-        .method-option.selected .radio-circle::after {
-            content: '';
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            background: #050505;
-        }
-
-        .method-name { font-size: 13px; font-weight: 500; flex: 1; }
-        .method-icon { font-size: 16px; color: rgba(255,255,255,0.4); }
-
-        /* ── PAY BUTTON ── */
-        .btn-pay {
-            width: 100%;
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 12px;
-            border: none;
-            background: #fff;
-            color: #050505;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 9px;
-            letter-spacing: 0.3px;
-            transition: all 0.3s;
-        }
-        .btn-pay:hover {
-            background: #e5e7eb;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(255,255,255,0.06);
-        }
-        .btn-pay:active { transform: scale(0.98); }
-
-        /* ── MODAL OVERLAY ── */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.75);
-            backdrop-filter: blur(6px);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.3s ease;
-        }
-        .modal-overlay.open { display: flex; }
-
-        .modal {
-            background: #0d1220;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 32px 28px;
-            width: 92%;
-            max-width: 420px;
-            text-align: center;
-            animation: modalPop 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
-            position: relative;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 16px; right: 18px;
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.4);
-            font-size: 18px;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .modal-close:hover { color: #fff; }
-
-        .modal-icon {
-            width: 52px; height: 52px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            margin: 0 auto 16px;
-        }
-
-        .modal h3 {
-            font-size: 17px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-        .modal p {
-            font-size: 13px;
-            color: rgba(255,255,255,0.45);
-            line-height: 1.7;
-            margin-bottom: 22px;
-        }
-
-        /* QRIS modal */
-        .qris-frame {
-            background: #fff;
-            border-radius: 14px;
-            padding: 14px;
-            width: 200px;
-            margin: 0 auto 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-        .qris-frame img {
-            width: 100%;
-            border-radius: 6px;
-            display: block;
-        }
-        .qris-frame span {
-            font-size: 10px;
-            color: #111;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        /* VA number */
-        .va-box {
-            background: rgba(96,165,250,0.06);
-            border: 1px dashed rgba(96,165,250,0.3);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 16px;
-        }
-        .va-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
-        .va-number {
-            font-size: 22px;
-            font-weight: 700;
-            color: #60a5fa;
-            letter-spacing: 3px;
-        }
-        .va-copy {
-            margin-top: 8px;
-            background: none;
-            border: 1px solid rgba(96,165,250,0.3);
-            color: #60a5fa;
-            padding: 5px 14px;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .va-copy:hover { background: rgba(96,165,250,0.1); }
-
-        /* WA button */
-        .btn-wa {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 9px;
-            width: 100%;
-            padding: 13px;
-            border-radius: 11px;
-            background: #25d366;
-            color: #fff;
-            font-weight: 700;
-            font-size: 14px;
-            text-decoration: none;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-wa:hover {
-            background: #1ebe5d;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(37,211,102,0.25);
-        }
-
-        .divider {
-            height: 1px;
-            background: rgba(255,255,255,0.06);
-            margin: 16px 0;
-        }
-
-        .total-tag {
-            font-size: 12px;
-            color: rgba(255,255,255,0.4);
-            margin-bottom: 16px;
-        }
-        .total-tag strong { color: #fff; font-size: 16px; }
-
-        /* ── ANIMATIONS ENTRY ── */
-        nav {
-            opacity: 0;
-            animation: slideDown 0.7s 0.05s ease-out forwards;
-        }
-        .card:nth-child(1) {
-            opacity: 0;
-            animation: fadeUp 0.7s 0.2s ease-out forwards;
-        }
-        .card:nth-child(2) {
-            opacity: 0;
-            animation: fadeUp 0.7s 0.35s ease-out forwards;
-        }
-        .method-option {
-            opacity: 0;
-            animation: fadeUp 0.5s ease-out forwards;
-        }
-        .method-option:nth-child(1) { animation-delay: 0.45s; }
-        .method-option:nth-child(2) { animation-delay: 0.52s; }
-        .method-option:nth-child(3) { animation-delay: 0.59s; }
-        .method-option:nth-child(4) { animation-delay: 0.66s; }
-        .method-option:nth-child(5) { animation-delay: 0.73s; }
-        .method-option:nth-child(6) { animation-delay: 0.80s; }
-        .method-option:nth-child(7) { animation-delay: 0.87s; }
-
-        .btn-pay {
-            opacity: 0;
-            animation: fadeUp 0.6s 0.95s ease-out forwards;
-        }
-
-        .summary-row {
-            opacity: 0;
-            animation: fadeUp 0.5s ease-out forwards;
-        }
-        .summary-row:nth-child(1) { animation-delay: 0.3s; }
-        .summary-row:nth-child(2) { animation-delay: 0.38s; }
-        .summary-row:nth-child(3) { animation-delay: 0.46s; }
-        .summary-row:nth-child(4) { animation-delay: 0.54s; }
-        .summary-row:nth-child(5) { animation-delay: 0.62s; }
-
-        /* ── KEYFRAMES ── */
-        @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeUp    { from { opacity:0; transform:translateY(22px);  } to { opacity:1; transform:translateY(0); } }
-        @keyframes slideUp {
-            from { opacity:0; transform: translateY(30px) scale(0.97); }
-            to   { opacity:1; transform: translateY(0) scale(1); }
-        }
-        @keyframes modalPop {
-            from { opacity:0; transform: translateY(40px) scale(0.94); }
-            to   { opacity:1; transform: translateY(0)   scale(1); }
-        }
-
-        /* ── RESPONSIVE ── */
-        @media (max-width: 820px) {
-            .container { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-
-<!-- Cursor Spotlight -->
-    <div class="cursor-spotlight" id="cursorSpotlight"></div>
-
-    <!-- Particle Canvas -->
-    <canvas id="particle-canvas"></canvas>
-
-    <!-- Shimmer Scan Line -->
-    <div class="shimmer-line"></div>
-
-
-    <!-- Navbar yang udah dikunci posisinya (Gak bakal lompat-lompat pas di-scroll) -->
-    <nav>
-        <a href="javascript:history.back()" class="nav-brand">SESSIONS</a> 
-    </nav>
-<div class="container">
-
-    <!-- ── ORDER SUMMARY ── -->
-    <div class="card">
-        <div class="card-title">Ringkasan Pesanan</div>
-
-        <div class="summary-row highlight">
-            <span><?= $packageName ?></span>
-            <span class="pkg-badge">Layanan Web</span>
+<main>
+    <section class="page-head">
+        <div class="container">
+            <a class="back-link" href="<?= $order ? 'orders.php' : 'listings.php' ?>">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+                <?= $order ? 'Kembali ke pesanan saya' : 'Kembali ke katalog' ?>
+            </a>
+            <h1>Checkout</h1>
+            <?php if ($order): ?>
+                <p>Kode pesanan <strong style="color:var(--text)"><?= e($order['order_code']) ?></strong> —
+                   pilih metode bayar, transfer, lalu upload bukti untuk verifikasi.</p>
+            <?php else: ?>
+                <p>Pilih metode pembayaran, lalu kirim bukti bayar ke WhatsApp kami untuk verifikasi.</p>
+            <?php endif; ?>
         </div>
-        <p class="pkg-desc">Pembuatan website custom eksklusif termasuk domain, hosting, dan integrasi CMS dashboard premium.</p>
+    </section>
 
-        <div class="summary-row">
-            <span>Pemesan</span>
-            <span style="color:#fff;font-weight:500"><?= htmlspecialchars($username) ?></span>
+    <section class="section" style="padding-top:8px;">
+        <div class="container">
+            <?php flash_alert(); ?>
+
+            <?php if ($error): ?>
+                <div class="alert alert-danger mb-3" role="alert">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+                    <span><?= e($error) ?></span>
+                </div>
+            <?php endif; ?>
+
+            <div class="grid-2" style="align-items:start;">
+
+                <!-- Ringkasan pesanan -->
+                <div class="panel">
+                    <h3 class="mb-2">Ringkasan Pesanan</h3>
+                    <div class="order-summary">
+                        <div class="summary-row" style="color:var(--text);font-weight:600;">
+                            <span><?= e($packageName) ?></span>
+                            <span class="badge badge-info">Layanan Web</span>
+                        </div>
+                        <div class="summary-row"><span>Pemesan</span><span style="color:var(--text)"><?= e($username) ?></span></div>
+                        <?php if ($order): ?>
+                            <div class="summary-row"><span>Kode Pesanan</span><span><?= e($order['order_code']) ?></span></div>
+                        <?php endif; ?>
+                        <div class="summary-row"><span>Harga Dasar</span><span><?= rupiah($packagePrice) ?></span></div>
+                        <div class="summary-row"><span>PPN (11%)</span><span><?= rupiah($tax) ?></span></div>
+                        <div class="summary-row"><span>Biaya Layanan</span><span style="color:var(--success)">Gratis</span></div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span style="color:var(--accent-strong)"><?= rupiah($totalPayment) ?></span>
+                        </div>
+                    </div>
+
+                    <?php if ($order): ?>
+                        <div class="mt-3" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                            <span class="faint">Status:</span>
+                            <?= order_status_badge($order) ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="alert alert-info mt-3">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg>
+                        <span>Pembayaran diverifikasi manual oleh admin — biasanya kurang dari 1×24 jam pada jam kerja.</span>
+                    </div>
+                </div>
+
+                <!-- Metode pembayaran / status -->
+                <div class="panel">
+                    <?php if ($proof): ?>
+                        <!-- Sudah upload bukti -->
+                        <h3 class="mb-2">Bukti Terkirim</h3>
+                        <div class="alert alert-success mb-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+                            <span>Bukti pembayaran sudah dikirim. Menunggu verifikasi admin.</span>
+                        </div>
+                        <div class="card-media" style="aspect-ratio:4/3;border-radius:12px;">
+                            <img src="uploads/<?= e($proof) ?>" alt="Bukti pembayaran" style="object-fit:contain;background:#fff;">
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <h3 class="mb-2">Ganti / Tambah Bukti</h3>
+                        <form action="checkout.php?order=<?= (int)$order['id'] ?>" method="POST" enctype="multipart/form-data" class="form">
+                            <?= csrf_field() ?>
+                            <div class="field">
+                                <label for="proof">File Bukti Baru</label>
+                                <input id="proof" type="file" name="proof" accept="image/jpeg,image/png,image/webp,application/pdf" required>
+                                <span class="hint">JPG/PNG/WebP/PDF, maks 2MB.</span>
+                            </div>
+                            <button type="submit" name="upload_proof" class="btn btn-soft btn-block">Ganti Bukti</button>
+                        </form>
+
+                        <a href="orders.php" class="btn btn-primary btn-block mt-2">Lihat Status Pesanan</a>
+
+                    <?php elseif ($method): ?>
+                        <!-- Metode dipilih, tinggal transfer + upload -->
+                        <h3 class="mb-2">Instruksi Pembayaran</h3>
+                        <div class="order-summary mb-2">
+                            <div class="summary-row"><span>Metode</span><span style="color:var(--text);font-weight:600;"><?= e($method) ?></span></div>
+                        </div>
+
+                        <button class="btn btn-soft btn-block" type="button" id="btnPay">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                            Lihat Instruksi Bayar
+                        </button>
+
+                        <div class="divider"></div>
+
+                        <form action="checkout.php?order=<?= (int)$order['id'] ?>" method="POST" enctype="multipart/form-data" class="form">
+                            <?= csrf_field() ?>
+                            <div class="field">
+                                <label for="proof">Upload Bukti Pembayaran</label>
+                                <input id="proof" type="file" name="proof" accept="image/jpeg,image/png,image/webp,application/pdf" required>
+                                <span class="hint">Screenshot struk / foto bukti transfer. JPG/PNG/WebP/PDF, maks 2MB.</span>
+                            </div>
+                            <button type="submit" name="upload_proof" class="btn btn-primary btn-block">
+                                Kirim Bukti Pembayaran
+                            </button>
+                        </form>
+
+                        <form action="checkout.php?order=<?= (int)$order['id'] ?>" method="POST" class="mt-2">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="method" value="">
+                            <button type="submit" name="save_method" class="btn btn-ghost btn-sm" style="width:100%;" disabled>Metode dipilih</button>
+                        </form>
+
+                    <?php elseif ($order): ?>
+                        <!-- Belum pilih metode -->
+                        <h3 class="mb-2">Metode Pembayaran</h3>
+                        <form action="checkout.php?order=<?= (int)$order['id'] ?>" method="POST">
+                            <?= csrf_field() ?>
+
+                            <div class="group-label">QRIS &amp; E-Wallet</div>
+                            <div class="pay-methods">
+                                <?php foreach (['QRIS', 'DANA', 'GOPAY', 'OVO'] as $m): ?>
+                                    <label class="pay-method"><input type="radio" name="method" value="<?= $m ?>" required> <?= $m ?></label>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div class="group-label">Transfer Bank</div>
+                            <div class="pay-methods">
+                                <?php foreach (['BCA', 'BNI', 'BRI'] as $m): ?>
+                                    <label class="pay-method"><input type="radio" name="method" value="<?= $m ?>" required> <?= $m ?></label>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <button class="btn btn-primary btn-block mt-3" type="submit" name="save_method">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                                Simpan Metode &amp; Lanjutkan
+                            </button>
+                        </form>
+
+                    <?php else: ?>
+                        <!-- Mode demo (tanpa pesanan) -->
+                        <h3 class="mb-2">Metode Pembayaran</h3>
+                        <div class="group-label">QRIS &amp; E-Wallet</div>
+                        <div class="pay-methods">
+                            <?php foreach (['QRIS', 'DANA', 'GOPAY', 'OVO'] as $m): ?>
+                                <label class="pay-method"><input type="radio" name="method" value="<?= $m ?>"> <?= $m ?></label>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <div class="group-label">Transfer Bank</div>
+                        <div class="pay-methods">
+                            <?php foreach (['BCA', 'BNI', 'BRI'] as $m): ?>
+                                <label class="pay-method"><input type="radio" name="method" value="<?= $m ?>"> <?= $m ?></label>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <button class="btn btn-primary btn-block mt-3" id="btnPay" type="button">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                            Lanjutkan Pembayaran
+                        </button>
+
+                        <div class="alert alert-info mt-3">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg>
+                            <span>Ini halaman contoh. Buat pesanan dari <a href="listings.php" style="color:var(--accent-strong)">katalog</a> agar status &amp; bukti pembayaran tercatat.</span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+            </div>
         </div>
-        <div class="summary-row">
-            <span>Harga Dasar</span>
-            <span>Rp <?= number_format($packagePrice,0,',','.') ?></span>
-        </div>
-        <div class="summary-row">
-            <span>PPN (11%)</span>
-            <span>Rp <?= number_format($tax,0,',','.') ?></span>
-        </div>
-        <div class="summary-row">
-            <span>Biaya Layanan</span>
-            <span style="color:#34d399">Gratis</span>
-        </div>
-        <div class="summary-row total">
-            <span>Total</span>
-            <span>Rp <?= number_format($totalPayment,0,',','.') ?></span>
-        </div>
-    </div>
+    </section>
+</main>
 
-    <!-- ── PAYMENT METHODS ── -->
-    <div class="card">
-        <div class="card-title">Metode Pembayaran</div>
-
-        <div class="group-label">QRIS & E-Wallet</div>
-
-        <label class="method-option" onclick="selectMethod(this, 'QRIS')">
-            <input type="radio" name="method" value="QRIS">
-            <div class="radio-circle"></div>
-            <span class="method-name">QRIS (Scan & Pay)</span>
-            <i class="fa-solid fa-qrcode method-icon"></i>
-        </label>
-        <label class="method-option" onclick="selectMethod(this, 'DANA')">
-            <input type="radio" name="method" value="DANA">
-            <div class="radio-circle"></div>
-            <span class="method-name">DANA</span>
-            <i class="fa-solid fa-wallet method-icon"></i>
-        </label>
-        <label class="method-option" onclick="selectMethod(this, 'GOPAY')">
-            <input type="radio" name="method" value="GOPAY">
-            <div class="radio-circle"></div>
-            <span class="method-name">GoPay</span>
-            <i class="fa-solid fa-mobile-screen method-icon"></i>
-        </label>
-        <label class="method-option" onclick="selectMethod(this, 'OVO')">
-            <input type="radio" name="method" value="OVO">
-            <div class="radio-circle"></div>
-            <span class="method-name">OVO</span>
-            <i class="fa-solid fa-coins method-icon"></i>
-        </label>
-
-        <div class="group-label">Virtual Account</div>
-
-        <label class="method-option" onclick="selectMethod(this, 'BCA')">
-            <input type="radio" name="method" value="BCA">
-            <div class="radio-circle"></div>
-            <span class="method-name">BCA Virtual Account</span>
-            <i class="fa-solid fa-building-columns method-icon"></i>
-        </label>
-        <label class="method-option" onclick="selectMethod(this, 'BNI')">
-            <input type="radio" name="method" value="BNI">
-            <div class="radio-circle"></div>
-            <span class="method-name">BNI Virtual Account</span>
-            <i class="fa-solid fa-building-columns method-icon"></i>
-        </label>
-        <label class="method-option" onclick="selectMethod(this, 'BRI')">
-            <input type="radio" name="method" value="BRI">
-            <div class="radio-circle"></div>
-            <span class="method-name">BRI Virtual Account</span>
-            <i class="fa-solid fa-building-columns method-icon"></i>
-        </label>
-
-        <button class="btn-pay" onclick="handlePay()">
-            <i class="fa-solid fa-lock"></i> Lanjutkan Pembayaran
-        </button>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<!-- MODAL: QRIS                           -->
-<!-- ══════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-QRIS">
+<!-- Modal instruksi bayar -->
+<div class="modal-overlay" id="payModal">
     <div class="modal">
-        <button class="modal-close" onclick="closeModal('QRIS')"><i class="fa-solid fa-xmark"></i></button>
-        <div class="modal-icon" style="background:rgba(255,255,255,0.06)">
-            <i class="fa-solid fa-qrcode"></i>
-        </div>
-        <h3>Bayar via QRIS</h3>
-        <p>Scan QR di bawah pakai aplikasi apapun — GoPay, OVO, DANA, BCA, dll.</p>
+        <button class="modal-close" type="button" id="modalClose" aria-label="Tutup">&times;</button>
+        <h3 id="payTitle">Bayar via QRIS</h3>
+        <p id="payDesc">Scan QR di bawah pakai aplikasi apa pun — GoPay, OVO, DANA, BCA, dll.</p>
 
-        <div class="qris-frame">
-            <!-- ⬇ Ganti 'qris.jpg' dengan nama file QRIS kamu -->
-            <img src="qr.jpeg" alt="QRIS SESSIONS"
-                 onerror="this.outerHTML='<div style=\'width:100%;height:160px;display:flex;align-items:center;justify-content:center;background:#f0f0f0;border-radius:6px;color:#999;font-size:12px;text-align:center;padding:10px\'>Upload foto QRIS kamu ke folder yang sama dengan nama <b>qris.jpg</b></div>'">
-            <span>SESSIONS STUDIO</span>
-        </div>
+        <div id="payBody"></div>
 
-        <div class="total-tag">Total: <strong>Rp <?= number_format($totalPayment,0,',','.') ?></strong></div>
+        <div class="total-tag">Total: <strong><?= rupiah($totalPayment) ?></strong></div>
 
-        <a class="btn-wa" id="wa-qris" href="https://wa.me/087867851779" target="_blank">
-            <i class="fa-brands fa-whatsapp"></i> Kirim Bukti ke WhatsApp
+        <a class="btn-wa" id="payWA" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg>
+            Konfirmasi via WhatsApp
         </a>
     </div>
 </div>
 
-<!-- ══════════════════════════════════════ -->
-<!-- MODAL: E-Wallet (DANA / GOPAY / OVO)  -->
-<!-- ══════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-EWALLET">
-    <div class="modal">
-        <button class="modal-close" onclick="closeModal('EWALLET')"><i class="fa-solid fa-xmark"></i></button>
-        <div class="modal-icon" style="background:rgba(96,165,250,0.08)">
-            <i class="fa-solid fa-wallet" style="color:#60a5fa"></i>
-        </div>
-        <h3 id="ewallet-title">Bayar via E-Wallet</h3>
-        <p id="ewallet-desc">Transfer ke nomor terdaftar berikut lalu kirim bukti bayar ke WhatsApp kami.</p>
-
-        <div class="va-box">
-            <div class="va-label">Nomor Tujuan</div>
-            <!-- ⬇ Ganti dengan nomor e-wallet kamu -->
-            <div class="va-number" id="ewallet-number">0878-6785-1779</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px" id="ewallet-name">SESSIONS STUDIO</div>
-        </div>
-
-        <div class="total-tag">Total: <strong>Rp <?= number_format($totalPayment,0,',','.') ?></strong></div>
-        <div class="divider"></div>
-
-        <a class="btn-wa" id="wa-ewallet" href="https://wa.me/087867851779" target="_blank">
-            <i class="fa-brands fa-whatsapp"></i> Kirim Bukti ke WhatsApp
-        </a>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════ -->
-<!-- MODAL: Virtual Account                -->
-<!-- ══════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-VA">
-    <div class="modal">
-        <button class="modal-close" onclick="closeModal('VA')"><i class="fa-solid fa-xmark"></i></button>
-        <div class="modal-icon" style="background:rgba(52,211,153,0.08)">
-            <i class="fa-solid fa-building-columns" style="color:#34d399"></i>
-        </div>
-        <h3 id="va-title">Transfer Bank</h3>
-        <p>Transfer ke rekening di bawah, lalu kirim bukti pembayaran ke WhatsApp kami untuk konfirmasi.</p>
-
-        <div class="va-box">
-            <div class="va-label">Nomor Rekening <span id="va-bank-label"></span></div>
-            <!-- ⬇ Ganti dengan nomor rekening kamu per bank -->
-            <div class="va-number" id="va-number">0000-0000-0000</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px" id="va-name">a.n. Nama Kamu</div>
-            <button class="va-copy" onclick="copyVA()"><i class="fa-regular fa-copy"></i> Salin Nomor</button>
-        </div>
-
-        <div class="total-tag">Total: <strong>Rp <?= number_format($totalPayment,0,',','.') ?></strong></div>
-        <div class="divider"></div>
-
-        <a class="btn-wa" id="wa-va" href="https://wa.me/087867851779" target="_blank">
-            <i class="fa-brands fa-whatsapp"></i> Kirim Bukti ke WhatsApp
-        </a>
-    </div>
-</div>
+<?php include 'includes/footer.php'; ?>
 
 <script>
-// ── KONFIGURASI — GANTI SESUAI DATA KAMU ──
-const WA_NUMBER = "<?= $waNumber ?>";
-const TOTAL     = "Rp <?= number_format($totalPayment,0,',','.') ?>";
+(function () {
+    'use strict';
 
-// Nomor e-wallet kamu
-const EWALLET = {
-    DANA:  { number: "0878-6785-1779", name: "SESSIONS STUDIO" },
-    GOPAY: { number: "0878-6785-1779", name: "SESSIONS STUDIO" },
-    OVO:   { number: "0878-6785-1779", name: "SESSIONS STUDIO" },
-};
+    var WA_NUMBER  = <?= json_encode($pay['wa']) ?>;
+    var TOTAL      = <?= json_encode(rupiah($totalPayment)) ?>;
+    var QRIS_IMG   = <?= json_encode($pay['qris']) ?>;
+    var EWALLET    = <?= json_encode($pay['ewallet']) ?>;
+    var BANK       = <?= json_encode($pay['bank']) ?>;
+    var ORDER_MODE = <?= $order ? 'true' : 'false' ?>;
+    var METHOD     = <?= json_encode($method) ?>;
+    var ORDER_CODE = <?= json_encode($order['order_code'] ?? '') ?>;
 
-// Nomor rekening per bank kamu
-const BANK = {
-    BCA: { number: "1234567890", name: "a.n. Nama Kamu" },
-    BNI: { number: "0987654321", name: "a.n. Nama Kamu" },
-    BRI: { number: "1122334455", name: "a.n. Nama Kamu" },
-};
-// ──────────────────────────────────────────
+    var modal = document.getElementById('payModal');
 
-let selectedMethod = null;
-let currentVANumber = "";
-
-function waLink(method) {
-    const msg = encodeURIComponent(
-        `Halo SESSIONS! Saya ingin mengirim bukti pembayaran.\n\n` +
-        `Metode: *${method}*\n` +
-        `Total: *${TOTAL}*\n\n` +
-        `[Lampirkan screenshot bukti transfer di sini]`
-    );
-    return `https://wa.me/${WA_NUMBER}?text=${msg}`;
-}
-
-function selectMethod(el, method) {
-    document.querySelectorAll('.method-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    el.querySelector('input').checked = true;
-    selectedMethod = method;
-}
-
-function handlePay() {
-    if (!selectedMethod) {
-        alert("Pilih metode pembayaran dulu ya!");
-        return;
+    function esc(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
     }
 
-    if (selectedMethod === 'QRIS') {
-        document.getElementById('wa-qris').href = waLink('QRIS');
-        openModal('QRIS');
-
-    } else if (['DANA','GOPAY','OVO'].includes(selectedMethod)) {
-        const d = EWALLET[selectedMethod];
-        document.getElementById('ewallet-title').textContent = `Bayar via ${selectedMethod}`;
-        document.getElementById('ewallet-desc').textContent =
-            `Transfer ke nomor ${selectedMethod} berikut, lalu kirim bukti ke WhatsApp.`;
-        document.getElementById('ewallet-number').textContent = d.number;
-        document.getElementById('ewallet-name').textContent   = d.name;
-        document.getElementById('wa-ewallet').href = waLink(selectedMethod);
-        openModal('EWALLET');
-
-    } else if (['BCA','BNI','BRI'].includes(selectedMethod)) {
-        const d = BANK[selectedMethod];
-        document.getElementById('va-title').textContent      = `Transfer ${selectedMethod}`;
-        document.getElementById('va-bank-label').textContent = selectedMethod;
-        document.getElementById('va-number').textContent     = d.number;
-        document.getElementById('va-name').textContent       = d.name;
-        document.getElementById('wa-va').href = waLink(selectedMethod);
-        currentVANumber = d.number;
-        openModal('VA');
+    function waLink(m) {
+        var msg = 'Halo SESSIONS! Saya ingin konfirmasi pembayaran.%0A%0A'
+            + (ORDER_CODE ? 'Pesanan: *' + ORDER_CODE + '*%0A' : '')
+            + 'Metode: *' + m + '*%0A'
+            + 'Total: *' + encodeURIComponent(TOTAL) + '*';
+        return 'https://wa.me/' + WA_NUMBER + '?text=' + msg;
     }
-}
 
-function openModal(id)  { document.getElementById('modal-' + id).classList.add('open'); }
-function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+    function vaHtml(number, name, copyable) {
+        return '<div class="va-box">'
+            + '<div class="va-label">Nomor Tujuan</div>'
+            + '<div class="va-number">' + esc(number) + '</div>'
+            + '<div class="va-name">' + esc(name) + '</div>'
+            + (copyable ? '<button class="va-copy" type="button" data-copy="' + esc(number) + '">Salin Nomor</button>' : '')
+            + '</div>';
+    }
 
-// Tutup modal kalau klik di luar
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', function(e) {
-        if (e.target === this) this.classList.remove('open');
+    function openModal(title, desc, bodyHtml, m) {
+        document.getElementById('payTitle').textContent = title;
+        document.getElementById('payDesc').textContent = desc;
+        document.getElementById('payBody').innerHTML = bodyHtml;
+        document.getElementById('payWA').href = waLink(m);
+        modal.classList.add('open');
+    }
+
+    function showMethod(m) {
+        if (m === 'QRIS') {
+            openModal('Bayar via QRIS',
+                'Scan QR di bawah pakai aplikasi apa pun — GoPay, OVO, DANA, BCA, dll.',
+                '<div class="qr-box"><img src="' + esc(QRIS_IMG) + '" alt="QRIS SESSIONS" width="190" height="190"><strong>SESSIONS STUDIO</strong></div>', m);
+        } else if (['DANA', 'GOPAY', 'OVO'].indexOf(m) >= 0) {
+            openModal('Bayar via ' + m,
+                'Transfer ke nomor ' + m + ' berikut, lalu upload bukti di halaman ini.',
+                vaHtml(EWALLET.number, EWALLET.name, false), m);
+        } else if (BANK[m]) {
+            openModal('Transfer ' + m,
+                'Transfer ke rekening di bawah, lalu upload bukti pembayaran di halaman ini.',
+                vaHtml(BANK[m].number, BANK[m].name, true), m);
+        }
+    }
+
+    var btnPay = document.getElementById('btnPay');
+    if (btnPay) {
+        btnPay.addEventListener('click', function () {
+            var m = METHOD;
+            if (!ORDER_MODE) {
+                var checked = document.querySelector('input[name="method"]:checked');
+                if (!checked) { alert('Pilih metode pembayaran dulu ya!'); return; }
+                m = checked.value;
+            }
+            if (m) { showMethod(m); }
+        });
+    }
+
+    function closeModal() { modal.classList.remove('open'); }
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+    var payBody = document.getElementById('payBody');
+    payBody.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-copy]');
+        if (!btn) return;
+        var text = btn.getAttribute('data-copy').replace(/-/g, '');
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(function () { alert('Nomor rekening berhasil disalin!'); });
+        }
     });
-});
-
-function copyVA() {
-    navigator.clipboard.writeText(currentVANumber.replace(/-/g,''))
-        .then(() => alert('Nomor rekening berhasil disalin!'));
-}
-
- /* ── 1. CURSOR SPOTLIGHT ── */
-        const spotlight = document.getElementById('cursorSpotlight');
-        let spotX = window.innerWidth / 2, spotY = window.innerHeight / 2;
-        let currentX = spotX, currentY = spotY;
-        let spotVisible = false;
-
-        document.addEventListener('mousemove', (e) => {
-            spotX = e.clientX;
-            spotY = e.clientY;
-            if (!spotVisible) {
-                spotlight.style.opacity = '1';
-                spotVisible = true;
-            }
-        });
-
-        document.addEventListener('mouseleave', () => {
-            spotlight.style.opacity = '0';
-            spotVisible = false;
-        });
-
-        function animateSpotlight() {
-            currentX += (spotX - currentX) * 0.07;
-            currentY += (spotY - currentY) * 0.07;
-            spotlight.style.left = currentX + 'px';
-            spotlight.style.top = currentY + 'px';
-            requestAnimationFrame(animateSpotlight);
-        }
-        animateSpotlight();
-
-        /* ── 2. AMBIENT PARTICLES ── */
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        const particles = [];
-        const PARTICLE_COUNT = 55;
-
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            particles.push({
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-                r: Math.random() * 1.2 + 0.3,
-                alpha: Math.random() * 0.35 + 0.05,
-                vx: (Math.random() - 0.5) * 0.18,
-                vy: (Math.random() - 0.5) * 0.18,
-                pulse: Math.random() * Math.PI * 2,
-                pulseSpeed: Math.random() * 0.012 + 0.006
-            });
-        }
-
-        function drawParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.pulse += p.pulseSpeed;
-
-                if (p.x < -5) p.x = canvas.width + 5;
-                if (p.x > canvas.width + 5) p.x = -5;
-                if (p.y < -5) p.y = canvas.height + 5;
-                if (p.y > canvas.height + 5) p.y = -5;
-
-                const dynamicAlpha = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
-
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${dynamicAlpha})`;
-                ctx.fill();
-            });
-            requestAnimationFrame(drawParticles);
-        }
-        drawParticles();
-
-        /* ── 3. MAGNETIC ICON pada stat-box ── */
-        document.querySelectorAll('.stat-box').forEach(box => {
-            const icon = box.querySelector('i');
-
-            box.addEventListener('mousemove', (e) => {
-                const rect = box.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                const dx = (e.clientX - cx) * 0.28;
-                const dy = (e.clientY - cy) * 0.28;
-                if (icon) icon.style.transform = `translate(${dx}px, ${dy}px) scale(1.15)`;
-            });
-            box.addEventListener('mouseleave', () => {
-                if (icon) icon.style.transform = 'translate(0, 0) scale(1)';
-            });
-        });
-
-        /* ── 4. CHARACTER REVEAL pada H1 ── */
-        const heroTitle = document.getElementById('heroTitle');
-        const titleText = heroTitle.textContent;
-        heroTitle.textContent = '';
-
-        titleText.split('').forEach((char, i) => {
-            const span = document.createElement('span');
-            span.classList.add('char');
-            span.textContent = char === ' ' ? '\u00A0' : char;
-            span.style.animationDelay = (0.4 + i * 0.07) + 's';
-            heroTitle.appendChild(span);
-        });
-
-        /* ── 5. TYPEWRITER pada SUBTITLE ── */
-        const subtitleEl = document.getElementById('subtitle');
-        const subtitleText = 'Accelerating the World\'s Transition to High-End Digital Presence';
-        let charIndex = 0;
-
-        function typeWriter() {
-            if (charIndex < subtitleText.length) {
-                subtitleEl.textContent += subtitleText[charIndex];
-                charIndex++;
-                setTimeout(typeWriter, 32);
-            } else {
-                subtitleEl.classList.add('done');
-            }
-        }
-
-        setTimeout(typeWriter, 1600);
+})();
 </script>
-</body>
-</html>

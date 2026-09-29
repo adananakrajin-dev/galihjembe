@@ -5,8 +5,10 @@ config.local.php
 database.php
 
 # ── Data runtime / unggahan pengguna ──
-uploads/
+uploads/*
+!uploads/.htaccess
 *.sql
+!database/schema.sql
 *.sqlite
 *.db
 backups/
