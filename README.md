@@ -2,7 +2,7 @@
 
 Marketplace **multi-seller** berbasis PHP native + MySQL untuk **jasa pembuatan website**
 (paket Basic/Pro/Enterprise + custom brief) dan **produk** apa pun.
-Dokumen rujukan: [`BRD.md`](BRD.md) · [`PRD.md`](PRD.md) · [`SRS.md`](SRS.md)
+Dokumen rujukan: [`BRD.md`](docs/BRD.md) · [`PRD.md`](docs/PRD.md) · [`SRS.md`](docs/SRS.md)
 
 Transaksi berjalan **manual** (tanpa payment gateway): buyer memesan → transfer/QRIS →
 unggah bukti → diverifikasi admin → seller memproses → selesai → review.
@@ -45,7 +45,8 @@ unggah bukti → diverifikasi admin → seller memproses → selesai → review.
 
 ```
 bisnis/
-├── BRD.md / PRD.md / SRS.md      # Dokumen requirements (rev. visi baru)
+├── docs/
+│   └── BRD.md / PRD.md / SRS.md   # Dokumen requirements (rev. visi baru)
 ├── index.php                      # Beranda dinamis (menggantikan index.html)
 ├── register/login/logout.php      # Autentikasi (throttle percobaan login)
 ├── dashboard.php                  # Ringkasan per role
@@ -63,6 +64,7 @@ bisnis/
 ├── assets/js/main.js              # Navigasi, konfirmasi, dll. (vanilla)
 ├── assets/js/wilayah.js           # Cascade wilayah (prov→kab→kec, cache localStorage)
 ├── assets/data/wilayah.json       # Dataset wilayah ID — sumber emsifa/api-wilayah-indonesia (MIT)
+├── assets/img/                    # Aset gambar (logo, QRIS, ilustrasi halaman statis)
 ├── database/
 │   ├── schema.sql                 # Skema 12 tabel + seed kategori
 │   └── migrate.php                # Migrasi idempotent (CLI / localhost)

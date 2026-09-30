@@ -29,7 +29,7 @@ if (isset($_GET['order'])) {
 // ── Info pembayaran: dari tabel settings, fallback nilai default ──
 $pay = [
     'wa'       => '6287867851779',
-    'qris'     => 'qr.jpeg',
+    'qris'     => 'assets/img/qr.jpeg',
     'ewallet'  => ['number' => '0878-6785-1779', 'name' => 'SESSIONS STUDIO'],
     'bank'     => [
         'BCA' => ['number' => '1234567890', 'name' => 'a.n. Nama Kamu'],

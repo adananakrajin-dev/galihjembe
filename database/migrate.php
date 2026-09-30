@@ -17,6 +17,8 @@
  *      (reports: listing_id nullable, review_id, unique anti-dobel, FK cascade)
  *   2d. Pengajuan seller wajib data verifikasi
  *      (seller_profiles: home_address — hanya tampil untuk admin)
+ *   2e. Penataan aset: gambar QRIS pindah ke assets/img/
+ *      (settings payment_qris diperbarui bila masih path lama)
  *   3. Membuat akun admin default bila belum ada (admin / admin123)
  */
 
@@ -229,6 +231,22 @@ try {
     }
 } catch (Throwable $e) {
     echo "Cek tabel seller_profiles gagal: {$e->getMessage()}\n";
+    $fail++;
+}
+
+// ── 2e. Penataan aset: gambar QRIS pindah ke assets/img/ ──
+try {
+    $res = $db->query("SELECT `value` FROM settings WHERE `key` = 'payment_qris' LIMIT 1");
+    $qris = $res ? $res->fetch_assoc() : null;
+    if ($qris !== null && $qris['value'] === 'qr.jpeg') {
+        $stmt = $db->prepare("UPDATE settings SET `value` = 'assets/img/qr.jpeg' WHERE `key` = 'payment_qris'");
+        $stmt->execute();
+        $stmt->close();
+        $added++;
+        echo "settings: payment_qris diperbarui ke assets/img/qr.jpeg\n";
+    }
+} catch (Throwable $e) {
+    echo "settings: gagal memperbarui payment_qris — {$e->getMessage()}\n";
     $fail++;
 }
 

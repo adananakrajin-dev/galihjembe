@@ -224,7 +224,7 @@ INSERT IGNORE INTO categories (name, slug, type) VALUES
 -- ── Seed pengaturan pembayaran ───────────────────────────────
 INSERT IGNORE INTO settings (`key`, `value`) VALUES
     ('payment_wa',          '6287867851779'),
-    ('payment_qris',        'qr.jpeg'),
+    ('payment_qris',        'assets/img/qr.jpeg'),
     ('payment_ewallet_num', '0878-6785-1779'),
     ('payment_ewallet_name','SESSIONS STUDIO'),
     ('payment_bca',         '1234567890'),
