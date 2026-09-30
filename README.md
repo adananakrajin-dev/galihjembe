@@ -56,7 +56,7 @@ bisnis/
 ├── includes/
 │   ├── functions.php              # CSRF, guard role, sync_role, upload aman, helper
 │   └── header.php / footer.php    # Navbar/footer (pakai $base agar bisa dari admin/)
-├── assets/css/style.css           # Design system tunggal (tema gelap, responsif)
+├── assets/css/style.css           # Design system tunggal (tema terang, responsif)
 ├── assets/js/main.js              # Navigasi, konfirmasi, dll. (vanilla)
 ├── database/
 │   ├── schema.sql                 # Skema 12 tabel + seed kategori
