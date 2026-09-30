@@ -66,6 +66,44 @@ if (isset($_POST['kirim_review'])) {
     exit;
 }
 
+// ── Ubah / hapus ulasan (jendela 7 hari setelah dikirim) ──
+$review_window_days = 7;
+
+if (isset($_POST['ubah_review']) || isset($_POST['hapus_review'])) {
+    csrf_check();
+    $is_edit = isset($_POST['ubah_review']);
+    $my_review = db_one($db, 'SELECT * FROM reviews WHERE order_id = ?', 'i', $order_id);
+    $too_old = $my_review && (time() - (int)strtotime($my_review['created_at'])) > $review_window_days * 86400;
+
+    if (!$my_review || (int)$my_review['buyer_id'] !== (int)$buyer_id) {
+        set_flash('Ulasan tidak ditemukan.', 'danger');
+    } elseif ($order['status'] !== 'selesai') {
+        set_flash('Ulasan hanya bisa diubah selama pesanan berstatus selesai.', 'danger');
+    } elseif ($too_old) {
+        set_flash("Ulasan hanya bisa diubah/dihapus maksimal {$review_window_days} hari setelah dikirim.", 'danger');
+    } elseif ($is_edit) {
+        $rating  = (int)($_POST['rating'] ?? 0);
+        $comment = trim($_POST['comment'] ?? '');
+        if ($rating < 1 || $rating > 5) {
+            set_flash('Pilih rating bintang 1–5.', 'danger');
+        } else {
+            $stmt = $db->prepare('UPDATE reviews SET rating = ?, comment = ?, updated_at = NOW() WHERE id = ?');
+            $stmt->bind_param('isi', $rating, $comment, $my_review['id']);
+            $stmt->execute();
+            $stmt->close();
+            set_flash('Ulasan diperbarui.', 'success');
+        }
+    } else {
+        $stmt = $db->prepare('DELETE FROM reviews WHERE id = ?');
+        $stmt->bind_param('i', $my_review['id']);
+        $stmt->execute();
+        $stmt->close();
+        set_flash('Ulasan dihapus.', 'success');
+    }
+    header('Location: order-detail.php?id=' . $order_id);
+    exit;
+}
+
 try { $has_review = db_one($db, 'SELECT * FROM reviews WHERE order_id = ?', 'i', $order_id); }
 catch (Throwable $e) { $has_review = null; }
 
@@ -208,21 +246,38 @@ include 'includes/header.php';
 
                     <?php if ($order['status'] === 'selesai'): ?>
                         <div class="mt-3">
-                            <h3 class="mb-2">Beri Ulasan</h3>
-                            <?php if ($has_review): ?>
+                            <?php
+                            $review_can_edit = $has_review
+                                && ((time() - (int)strtotime($has_review['created_at'])) <= $review_window_days * 86400);
+                            $editing_review = $review_can_edit && (($_GET['edit_review'] ?? '') === '1');
+                            ?>
+                            <h3 class="mb-2"><?= $editing_review ? 'Ubah Ulasan' : 'Beri Ulasan' ?></h3>
+                            <?php if ($has_review && !$editing_review): ?>
                                 <div class="alert alert-success">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
-                                    <span>Terima kasih, ulasanmu sudah terkirim (<?= (int)$has_review['rating'] ?>/5).</span>
+                                    <span>Terima kasih, ulasanmu sudah terkirim (<?= (int)$has_review['rating'] ?>/5)<?= $has_review['updated_at'] ? ' · diedit' : '' ?>.</span>
                                 </div>
+                                <?php if ($review_can_edit): ?>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                                        <a class="btn btn-soft btn-sm" href="order-detail.php?id=<?= $order_id ?>&amp;edit_review=1">Ubah Ulasan</a>
+                                        <form method="POST" action="order-detail.php?id=<?= $order_id ?>" data-confirm="Hapus ulasan ini? Tindakan ini tidak bisa dibatalkan.">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" name="hapus_review" class="btn btn-ghost btn-sm">Hapus Ulasan</button>
+                                        </form>
+                                    </div>
+                                    <p class="faint mt-1" style="font-size:12px;">Bisa diubah/dihapus sampai <?= $review_window_days ?> hari setelah dikirim.</p>
+                                <?php else: ?>
+                                    <p class="faint" style="font-size:12px;">Masa ubah ulasan sudah lewat (<?= $review_window_days ?> hari).</p>
+                                <?php endif; ?>
                             <?php else: ?>
-                                <form method="POST" action="order-detail.php?id=<?= $order_id ?>" class="form">
+                                <form method="POST" action="order-detail.php?id=<?= $order_id ?>" class="form" data-confirm="<?= $editing_review ? 'Simpan perubahan ulasan ini?' : 'Kirim ulasan ini?' ?>">
                                     <?= csrf_field() ?>
                                     <div class="field">
                                         <label>Rating</label>
                                         <div style="display:flex;gap:6px;" id="starPick">
                                             <?php for ($s = 1; $s <= 5; $s++): ?>
                                                 <label style="cursor:pointer;">
-                                                    <input type="radio" name="rating" value="<?= $s ?>" required style="position:absolute;opacity:0;">
+                                                    <input type="radio" name="rating" value="<?= $s ?>" required style="position:absolute;opacity:0;"<?= $editing_review && (int)$has_review['rating'] === $s ? ' checked' : '' ?>>
                                                     <span class="star" data-v="<?= $s ?>" style="font-size:26px;color:var(--faint);transition:color .15s;">&#9733;</span>
                                                 </label>
                                             <?php endfor; ?>
@@ -230,9 +285,16 @@ include 'includes/header.php';
                                     </div>
                                     <div class="field">
                                         <label for="comment">Komentar <span class="faint">(opsional)</span></label>
-                                        <textarea id="comment" name="comment" style="min-height:90px;" placeholder="Ceritakan pengalamanmu..."></textarea>
+                                        <textarea id="comment" name="comment" style="min-height:90px;" placeholder="Ceritakan pengalamanmu..."><?= $editing_review ? e($has_review['comment']) : '' ?></textarea>
                                     </div>
-                                    <button type="submit" name="kirim_review" class="btn btn-primary btn-block">Kirim Ulasan</button>
+                                    <?php if ($editing_review): ?>
+                                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                            <button type="submit" name="ubah_review" class="btn btn-primary">Simpan Perubahan</button>
+                                            <a class="btn btn-ghost" href="order-detail.php?id=<?= $order_id ?>">Batal</a>
+                                        </div>
+                                    <?php else: ?>
+                                        <button type="submit" name="kirim_review" class="btn btn-primary btn-block">Kirim Ulasan</button>
+                                    <?php endif; ?>
                                 </form>
                             <?php endif; ?>
                         </div>

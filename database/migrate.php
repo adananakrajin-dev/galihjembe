@@ -12,6 +12,9 @@
  *   2. Menambahkan kolom baru pada tabel `users` & `listings` lama bila ada
  *      (users: name, email, phone, location, avatar, role, status, dll.)
  *      (listings: province, regency, district, rt, rw — cascade wilayah)
+ *   2c. Kolom moderasi ulasan & laporan review
+ *      (reviews: updated_at, reply, replied_at, reply_updated_at)
+ *      (reports: listing_id nullable, review_id, unique anti-dobel, FK cascade)
  *   3. Membuat akun admin default bila belum ada (admin / admin123)
  */
 
@@ -133,6 +136,78 @@ try {
     echo "Cek tabel listings gagal: {$e->getMessage()}\n";
     $fail++;
 }
+
+// ── 2c. Kolom moderasi ulasan & dukungan laporan review ──
+$review_wanted = [
+    'updated_at'       => "ADD COLUMN `updated_at` DATETIME NULL AFTER `created_at`",
+    'reply'            => "ADD COLUMN `reply` TEXT NULL AFTER `updated_at`",
+    'replied_at'       => "ADD COLUMN `replied_at` DATETIME NULL AFTER `reply`",
+    'reply_updated_at' => "ADD COLUMN `reply_updated_at` DATETIME NULL AFTER `replied_at`",
+];
+
+try {
+    $res = $db->query("SHOW COLUMNS FROM reviews");
+    $existing = [];
+    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
+
+    foreach ($review_wanted as $col => $ddl) {
+        if (isset($existing[$col])) { continue; }
+        try {
+            $db->query("ALTER TABLE reviews " . $ddl);
+            $added++;
+            echo "reviews: kolom `{$col}` ditambahkan\n";
+        } catch (Throwable $e) {
+            echo "reviews: gagal menambah kolom `{$col}` — {$e->getMessage()}\n";
+            $fail++;
+        }
+    }
+} catch (Throwable $e) {
+    echo "Cek tabel reviews gagal: {$e->getMessage()}\n";
+    $fail++;
+}
+
+// Laporan: dukung target ulasan (review_id) selain listing
+try {
+    $res = $db->query("SHOW COLUMNS FROM reports");
+    $rrows = [];
+    while ($row = $res->fetch_assoc()) { $rrows[$row['Field']] = $row; }
+
+    if (isset($rrows['listing_id']) && ($rrows['listing_id']['Null'] ?? 'YES') !== 'YES') {
+        try {
+            $db->query("ALTER TABLE reports MODIFY COLUMN `listing_id` INT NULL");
+            $added++;
+            echo "reports: listing_id dibuat nullable (dukung laporan ulasan)\n";
+        } catch (Throwable $e) {
+            echo "reports: gagal membuat listing_id nullable — {$e->getMessage()}\n";
+            $fail++;
+        }
+    }
+    if (!isset($rrows['review_id'])) {
+        try {
+            $db->query("ALTER TABLE reports ADD COLUMN `review_id` INT NULL AFTER `listing_id`");
+            $added++;
+            echo "reports: kolom `review_id` ditambahkan\n";
+        } catch (Throwable $e) {
+            echo "reports: gagal menambah kolom `review_id` — {$e->getMessage()}\n";
+            $fail++;
+        }
+    }
+} catch (Throwable $e) {
+    echo "Cek tabel reports gagal: {$e->getMessage()}\n";
+    $fail++;
+}
+
+// Indeks unik anti-dobel laporan review + FK (sudah ada → biarkan)
+try {
+    $db->query("ALTER TABLE reports ADD UNIQUE KEY uq_report_review (reporter_id, review_id)");
+    $added++;
+    echo "reports: unique uq_report_review ditambahkan\n";
+} catch (Throwable $e) { /* sudah ada — biarkan */ }
+try {
+    $db->query("ALTER TABLE reports ADD CONSTRAINT fk_report_review FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE");
+    $added++;
+    echo "reports: FK fk_report_review ditambahkan\n";
+} catch (Throwable $e) { /* sudah ada — biarkan */ }
 
 // ── 3. Akun admin default ──
 try {

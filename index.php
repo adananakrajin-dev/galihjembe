@@ -49,7 +49,7 @@ try {
     // ── Ulasan terbaru pembeli (sembunyi otomatis bila kosong) ──
     $reviews_home = db_all(
         $db,
-        'SELECT r.rating, r.comment, r.created_at, u.username AS buyer_name, l.title AS listing_title
+        'SELECT r.rating, r.comment, r.reply, r.created_at, u.username AS buyer_name, l.title AS listing_title
          FROM reviews r
          JOIN orders o ON o.id = r.order_id
          JOIN users u ON u.id = o.buyer_id
@@ -237,6 +237,12 @@ include 'includes/header.php';
                         <article class="testi-card">
                             <div class="testi-stars" aria-label="<?= (int)$r['rating'] ?> dari 5"><?= $stars ?></div>
                             <blockquote>&ldquo;<?= e($r['comment']) ?>&rdquo;</blockquote>
+                            <?php if (!empty($r['reply'])): ?>
+                                <div class="review-reply mt-1" style="font-size:13px;">
+                                    <strong style="font-size:12px;">Balasan penjual:</strong>
+                                    <?= e($r['reply']) ?>
+                                </div>
+                            <?php endif; ?>
                             <div class="testi-who">
                                 <div class="testi-avatar" aria-hidden="true"><?= e($initial) ?></div>
                                 <div>

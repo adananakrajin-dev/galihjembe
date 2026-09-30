@@ -13,7 +13,8 @@ unggah bukti → diverifikasi admin → seller memproses → selesai → review.
 - Register (role `buyer`) → login → logout; password di-hash `password_hash()`
 - Katalog dengan pencarian, filter kategori/tipe/harga/**lokasi (provinsi → kabupaten)**, paginasi
 - Detail listing: galeri foto, paket harga (jasa), favorit, laporan, tombol WhatsApp
-- Profil (edit data + ganti password), daftar favorit, riwayat pesanan + review bintang
+- Ulasan tampil di detail listing + **balasan penjual**; pengguna bisa **melaporkan ulasan** (anti-dobel)
+- Profil (edit data + ganti password), daftar favorit, riwayat pesanan + review bintang (**ubah/hapus ≤7 hari** setelah dikirim)
 - Halaman statis (kontak, kredit, berita, portofolio, dll.) memakai design system yang sama
 
 **Jasa Web**
@@ -36,7 +37,7 @@ unggah bukti → diverifikasi admin → seller memproses → selesai → review.
 
 **Admin** (`/admin/`, role `admin`)
 - Ringkasan statistik + antrean kerja, approval seller, moderasi listing
-- Verifikasi bukti bayar, kelola pengguna/kategori, laporan isi
+- Verifikasi bukti bayar, kelola pengguna/kategori, **laporan isi** (listing & ulasan: tangani / tolak / hapus ulasan)
 
 > Di luar scope (lihat BRD): payment gateway otomatis, ekspedisi, chat real-time.
 

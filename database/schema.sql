@@ -165,6 +165,10 @@ CREATE TABLE IF NOT EXISTS reviews (
     rating     TINYINT NOT NULL,                 -- 1..5
     comment    TEXT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL,                    -- buyer mengedit ulasan (label "diedit")
+    reply      TEXT NULL,                        -- balasan penjual
+    replied_at DATETIME NULL,
+    reply_updated_at DATETIME NULL,
     UNIQUE KEY uq_review_order (order_id),
     CONSTRAINT fk_review_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -180,17 +184,21 @@ CREATE TABLE IF NOT EXISTS favorites (
     CONSTRAINT fk_fav_listing FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ── Laporan listing ──────────────────────────────────────────
+-- ── Laporan listing & ulasan ─────────────────────────────────
 CREATE TABLE IF NOT EXISTS reports (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     reporter_id INT NOT NULL,
-    listing_id  INT NOT NULL,
+    listing_id  INT NULL,                       -- NULL bila laporan menyorot ulasan saja
+    review_id   INT NULL,                       -- laporan atas ulasan (FK reviews)
     reason      VARCHAR(255) NOT NULL,
     status      ENUM('pending','resolved','rejected') NOT NULL DEFAULT 'pending',
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_report_status (status),
+    KEY idx_report_review (review_id),
+    UNIQUE KEY uq_report_review (reporter_id, review_id),
     CONSTRAINT fk_report_user FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_report_listing FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
+    CONSTRAINT fk_report_listing FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
+    CONSTRAINT fk_report_review FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── Pengaturan situs (info pembayaran, kontak, dst.) ─────────

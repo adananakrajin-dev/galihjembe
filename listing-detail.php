@@ -38,6 +38,93 @@ if (isset($_POST['report'])) {
     exit;
 }
 
+// ── Balasan penjual & laporan ulasan ──
+$review_reasons = [
+    'Ulasan kasar atau menyerang pribadi',
+    'Spam / promosi di luar topik',
+    'Ulasan palsu (tidak pernah membeli)',
+    'Mengandung konten tidak relevan',
+    'Lainnya',
+];
+
+if (isset($_POST['balas_review'])) {
+    csrf_check();
+    require_login('listing-detail.php?id=' . $id);
+    $review_id = (int)($_POST['review_id'] ?? 0);
+    $text = trim($_POST['reply'] ?? '');
+    $rev = db_one($db, 'SELECT id, seller_id, reply FROM reviews WHERE id = ? AND listing_id = ?', 'ii', $review_id, $id);
+    if (!$rev) {
+        set_flash('Ulasan tidak ditemukan.', 'danger');
+    } elseif ((int)$rev['seller_id'] !== $viewer_id) {
+        set_flash('Hanya penjual ulasan ini yang boleh membalas.', 'danger');
+    } elseif ($text === '' || strlen($text) > 4000) {
+        set_flash('Balasan harus diisi (maks. ±1000 karakter).', 'danger');
+    } else {
+        $is_new = ($rev['reply'] === null || $rev['reply'] === '');
+        if ($is_new) {
+            $stmt = $db->prepare('UPDATE reviews SET reply = ?, replied_at = NOW() WHERE id = ?');
+        } else {
+            $stmt = $db->prepare('UPDATE reviews SET reply = ?, reply_updated_at = NOW() WHERE id = ?');
+        }
+        $stmt->bind_param('si', $text, $review_id);
+        $stmt->execute();
+        $stmt->close();
+        set_flash($is_new ? 'Balasan terkirim.' : 'Balasan diperbarui.', 'success');
+    }
+    header('Location: listing-detail.php?id=' . $id);
+    exit;
+}
+
+if (isset($_POST['hapus_balasan'])) {
+    csrf_check();
+    require_login('listing-detail.php?id=' . $id);
+    $review_id = (int)($_POST['review_id'] ?? 0);
+    $rev = db_one($db, 'SELECT id, seller_id FROM reviews WHERE id = ? AND listing_id = ?', 'ii', $review_id, $id);
+    if (!$rev) {
+        set_flash('Ulasan tidak ditemukan.', 'danger');
+    } elseif ((int)$rev['seller_id'] !== $viewer_id) {
+        set_flash('Hanya penjual ulasan ini yang boleh menghapus balasan.', 'danger');
+    } else {
+        $stmt = $db->prepare('UPDATE reviews SET reply = NULL, replied_at = NULL, reply_updated_at = NULL WHERE id = ?');
+        $stmt->bind_param('i', $review_id);
+        $stmt->execute();
+        $stmt->close();
+        set_flash('Balasan dihapus.', 'success');
+    }
+    header('Location: listing-detail.php?id=' . $id);
+    exit;
+}
+
+if (isset($_POST['lapor_review'])) {
+    csrf_check();
+    require_login('listing-detail.php?id=' . $id);
+    $review_id = (int)($_POST['review_id'] ?? 0);
+    $reason = trim($_POST['reason_review'] ?? '');
+    $rev = db_one($db, 'SELECT id, listing_id, buyer_id, seller_id FROM reviews WHERE id = ? AND listing_id = ?', 'ii', $review_id, $id);
+    if (!$rev) {
+        set_flash('Ulasan tidak ditemukan.', 'danger');
+    } elseif ((int)$rev['buyer_id'] === $viewer_id) {
+        set_flash('Tidak bisa melaporkan ulasanmu sendiri.', 'danger');
+    } elseif ((int)$rev['seller_id'] === $viewer_id) {
+        set_flash('Tidak bisa melaporkan ulasan di toko sendiri.', 'danger');
+    } elseif (!in_array($reason, $review_reasons, true)) {
+        set_flash('Pilih alasan laporan.', 'danger');
+    } else {
+        $dup = db_one($db, 'SELECT id FROM reports WHERE reporter_id = ? AND review_id = ?', 'ii', $viewer_id, $review_id);
+        if ($dup) {
+            set_flash('Kamu sudah melaporkan ulasan ini.', 'info');
+        } else {
+            $stmt = $db->prepare('INSERT INTO reports (reporter_id, listing_id, review_id, reason) VALUES (?, ?, ?, ?)');
+            $stmt->bind_param('iiis', $viewer_id, $rev['listing_id'], $review_id, $reason);
+            $stmt->execute();
+            $stmt->close();
+            set_flash('Laporan terkirim. Admin akan meninjau ulasan ini.', 'info');
+        }
+    }
+    header('Location: listing-detail.php?id=' . $id);
+    exit;
+}
+
 // ── Ambil listing (approved, atau milik sendiri / admin) ──
 $sql = "SELECT l.*,
                c.name AS category_name,
@@ -85,7 +172,9 @@ catch (Throwable $e) {}
 try {
     $reviews = db_all(
         $db,
-        "SELECT r.rating, r.comment, r.created_at, ub.name AS buyer_name, ub.username AS buyer_username
+        "SELECT r.id, r.buyer_id, r.seller_id, r.rating, r.comment,
+                r.created_at, r.updated_at, r.reply, r.replied_at, r.reply_updated_at,
+                ub.name AS buyer_name, ub.username AS buyer_username
          FROM reviews r JOIN users ub ON ub.id = r.buyer_id
          WHERE r.listing_id = ? ORDER BY r.created_at DESC LIMIT 10",
         'i', $id
@@ -257,15 +346,69 @@ include 'includes/header.php';
                             <p class="faint">Belum ada ulasan untuk listing ini.</p>
                         <?php else: ?>
                             <div style="display:flex;flex-direction:column;gap:14px;">
-                                <?php foreach ($reviews as $r): ?>
+                                <?php foreach ($reviews as $r):
+                                    $is_review_author = $viewer_id > 0 && (int)$r['buyer_id'] === $viewer_id;
+                                    $is_review_seller  = $viewer_id > 0 && (int)$r['seller_id'] === $viewer_id;
+                                    $can_report_review = $viewer_id > 0 && !$is_review_author && !$is_review_seller;
+                                ?>
                                     <div>
                                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                                             <strong style="font-size:14px;"><?= e($r['buyer_name'] ?: $r['buyer_username']) ?></strong>
                                             <span class="badge badge-pending"><?= str_repeat('★', (int)$r['rating']) ?></span>
-                                            <span class="faint"><?= e(date('d M Y', strtotime($r['created_at']))) ?></span>
+                                            <span class="faint"><?= e(date('d M Y', strtotime($r['created_at']))) ?><?= $r['updated_at'] ? ' · diedit' : '' ?></span>
                                         </div>
                                         <?php if ($r['comment']): ?>
                                             <p class="mt-1" style="font-size:14px;"><?= e($r['comment']) ?></p>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($r['reply'])): ?>
+                                            <div class="review-reply mt-1">
+                                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                                    <strong style="font-size:13px;">Balasan Penjual</strong>
+                                                    <span class="faint" style="font-size:12px;"><?= e(date('d M Y', strtotime($r['replied_at']))) ?><?= $r['reply_updated_at'] ? ' · diedit' : '' ?></span>
+                                                </div>
+                                                <p style="font-size:14px;"><?= e($r['reply']) ?></p>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if ($is_review_seller): ?>
+                                            <?php if (empty($r['reply'])): ?>
+                                                <form method="POST" class="mt-2" data-confirm="Kirim balasan untuk ulasan ini?" style="display:flex;flex-direction:column;gap:8px;max-width:560px;">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="review_id" value="<?= (int)$r['id'] ?>">
+                                                    <textarea name="reply" rows="2" maxlength="1000" placeholder="Balas ulasan ini (maks. 1000 karakter)…" style="font-size:14px;"></textarea>
+                                                    <div><button type="submit" name="balas_review" class="btn btn-soft btn-sm">Kirim Balasan</button></div>
+                                                </form>
+                                            <?php else: ?>
+                                                <details class="mt-1">
+                                                    <summary class="faint" style="cursor:pointer;font-size:13px;">Ubah balasan</summary>
+                                                    <form method="POST" class="mt-1" data-confirm="Simpan perubahan balasan?" style="display:flex;flex-direction:column;gap:8px;max-width:560px;">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="review_id" value="<?= (int)$r['id'] ?>">
+                                                        <textarea name="reply" rows="2" maxlength="1000" style="font-size:14px;"><?= e($r['reply']) ?></textarea>
+                                                        <div><button type="submit" name="balas_review" class="btn btn-soft btn-sm">Simpan Perubahan</button></div>
+                                                    </form>
+                                                </details>
+                                                <form method="POST" class="mt-1" data-confirm="Hapus balasan ini?" style="max-width:560px;">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="review_id" value="<?= (int)$r['id'] ?>">
+                                                    <button type="submit" name="hapus_balasan" class="btn btn-ghost btn-sm">Hapus Balasan</button>
+                                                </form>
+                                            <?php endif; ?>
+                                        <?php elseif ($can_report_review): ?>
+                                            <details class="mt-1">
+                                                <summary class="faint" style="cursor:pointer;font-size:12px;">Laporkan ulasan</summary>
+                                                <form method="POST" class="mt-1" data-confirm="Kirim laporan atas ulasan ini?" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="review_id" value="<?= (int)$r['id'] ?>">
+                                                    <select name="reason_review" class="input" style="min-height:36px;font-size:13px;width:auto;padding:4px 8px;" required>
+                                                        <?php foreach ($review_reasons as $opt): ?>
+                                                            <option value="<?= e($opt) ?>"><?= e($opt) ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                    <button type="submit" name="lapor_review" class="btn btn-ghost btn-sm">Kirim</button>
+                                                </form>
+                                            </details>
                                         <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>

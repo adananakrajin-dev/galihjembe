@@ -668,6 +668,15 @@ tr:last-child td { border-bottom: none; }
 .testi-card blockquote { margin: 0; font-size: 14.5px; color: var(--text); line-height: 1.65; flex: 1; }
 .testi-who { display: flex; align-items: center; gap: 10px; }
 
+/* ── Balasan penjual di bawah ulasan ── */
+.review-reply {
+    background: var(--surface-2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 12px;
+    color: var(--text);
+}
+
 .testi-avatar {
     width: 38px;
     height: 38px;
