@@ -417,9 +417,9 @@ include 'includes/header.php';
                     </div>
                 </div>
 
-                <!-- Kolom kanan: harga + aksi + penjual -->
+                <!-- Kolom kanan: harga + aksi + penjual (tanpa kartu putih, biar lebih clear) -->
                 <div>
-                    <div class="panel">
+                    <div class="buy-plain">
                         <div class="faint"><?= $is_service ? 'Mulai dari' : 'Harga' ?></div>
                         <div style="font-size:clamp(24px,4vw,32px);font-weight:700;color:var(--accent-strong);margin-top:4px;">
                             <?= rupiah($listing['price']) ?>

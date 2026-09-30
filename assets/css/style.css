@@ -408,6 +408,9 @@ a.card:hover {
 
 .panel-sm { max-width: 460px; margin-inline: auto; }
 
+/* Blok harga/aksi listing tanpa kartu putih — konten langsung menyatu dgn halaman */
+.buy-plain { display: block; }
+
 .form { display: flex; flex-direction: column; gap: 18px; }
 
 .form-row { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }
@@ -756,11 +759,50 @@ tr:last-child td { border-bottom: none; }
     margin-top: 48px;
     border-top: 1px solid var(--border);
     background: var(--surface-2);
-    padding: 28px 0;
-    font-size: 13px;
+    padding: clamp(32px, 5vw, 48px) 0 0;
+    font-size: 13.5px;
     color: var(--faint);
 }
 
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: clamp(24px, 4vw, 48px);
+    padding-bottom: clamp(24px, 4vw, 36px);
+}
+
+.footer-brand .brand { font-size: 19px; display: inline-block; margin-bottom: 10px; }
+.footer-brand p { max-width: 320px; line-height: 1.6; }
+
+.footer-col h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 12px;
+}
+
+.footer-col ul { list-style: none; display: flex; flex-direction: column; }
+
+.footer-col a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;          /* tap target nyaman di mobile */
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s ease;
+}
+
+.footer-col a:hover { color: var(--accent-strong); }
+
+.footer-bottom {
+    border-top: 1px solid var(--border);
+    padding: 18px 0;
+    text-align: center;
+}
+
+/* Footer 1-baris untuk halaman HTML statis (compat lama) */
 .footer-inner {
     display: flex;
     align-items: center;
@@ -1033,6 +1075,7 @@ tr:last-child td { border-bottom: none; }
     .nav-inner { gap: 8px; }
     .nav-links { gap: 2px; }
     .nav-links a { padding: 0 10px; font-size: 13.5px; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 768px) {
@@ -1064,6 +1107,9 @@ tr:last-child td { border-bottom: none; }
     .search-bar { flex-direction: column; }
     .search-bar .btn { width: 100%; }
 
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+
+    /* Footer 1-baris halaman statis: rapat jadi satu kolom & rata tengah */
     .footer-inner { flex-direction: column; text-align: center; }
     .footer-inner nav { justify-content: center; }
 }
@@ -1091,6 +1137,9 @@ tr:last-child td { border-bottom: none; }
     }
     .chips::-webkit-scrollbar { display: none; }
     .chip { flex: none; }
+
+    .footer-grid { grid-template-columns: 1fr; gap: 4px; }
+    .footer-col h4 { margin-top: 14px; }
 }
 
 /* ── Aksesibilitas: kurangi animasi bila diminta OS ── */
