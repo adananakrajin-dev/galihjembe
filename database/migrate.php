@@ -15,6 +15,8 @@
  *   2c. Kolom moderasi ulasan & laporan review
  *      (reviews: updated_at, reply, replied_at, reply_updated_at)
  *      (reports: listing_id nullable, review_id, unique anti-dobel, FK cascade)
+ *   2d. Pengajuan seller wajib data verifikasi
+ *      (seller_profiles: home_address — hanya tampil untuk admin)
  *   3. Membuat akun admin default bila belum ada (admin / admin123)
  */
 
@@ -208,6 +210,27 @@ try {
     $added++;
     echo "reports: FK fk_report_review ditambahkan\n";
 } catch (Throwable $e) { /* sudah ada — biarkan */ }
+
+// ── 2d. Data verifikasi pengajuan seller (alamat rumah — khusus admin) ──
+try {
+    $res = $db->query("SHOW COLUMNS FROM seller_profiles");
+    $existing = [];
+    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
+
+    if (!isset($existing['home_address'])) {
+        try {
+            $db->query("ALTER TABLE seller_profiles ADD COLUMN `home_address` TEXT NULL AFTER `payout_info`");
+            $added++;
+            echo "seller_profiles: kolom `home_address` ditambahkan\n";
+        } catch (Throwable $e) {
+            echo "seller_profiles: gagal menambah kolom `home_address` — {$e->getMessage()}\n";
+            $fail++;
+        }
+    }
+} catch (Throwable $e) {
+    echo "Cek tabel seller_profiles gagal: {$e->getMessage()}\n";
+    $fail++;
+}
 
 // ── 3. Akun admin default ──
 try {

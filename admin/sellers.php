@@ -99,6 +99,22 @@ try {
                                     <?php endif; ?>
                                     <div class="faint mt-1">Pencairan: <?= e($p['payout_info']) ?> ·
                                         diajukan <?= e(date('d M Y', strtotime($p['created_at']))) ?></div>
+
+                                    <?php // Data verifikasi anti-penipuan — hanya tampil di halaman admin ini ?>
+                                    <div class="mt-1" style="font-size:13px;background:var(--surface-2);border:1px solid var(--border);
+                                                           border-radius:8px;padding:8px 10px;">
+                                        <span class="faint" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
+                                                   text-transform:uppercase;letter-spacing:.04em;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;">
+                                                <rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+                                            </svg>
+                                            Alamat rumah (khusus admin)
+                                        </span>
+                                        <div style="margin-top:3px;color:var(--text);">
+                                            <?php $ha = trim((string)($p['home_address'] ?? '')); ?>
+                                            <?= $ha !== '' ? e($ha) : '<span class="faint">-</span>' ?>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div style="display:flex;gap:8px;flex-wrap:wrap;">

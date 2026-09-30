@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS seller_profiles (
     store_name  VARCHAR(100) NOT NULL,
     store_desc  TEXT NULL,
     payout_info VARCHAR(100) NULL,               -- rekening / e-wallet pencairan
+    home_address TEXT NULL,                       -- alamat rumah (HANYA tampil utk admin, verifikasi anti-penipuan)
     approval    ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
