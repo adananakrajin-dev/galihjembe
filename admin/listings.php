@@ -67,7 +67,7 @@ try {
                     <p>Tidak ada listing dengan status filter ini.</p>
                 </div>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="row-list">
                     <?php foreach ($items as $l):
                         $mod_badge = match ($l['moderation']) {
                             'approved' => '<span class="badge badge-available">Disetujui</span>',
@@ -75,7 +75,7 @@ try {
                             default    => '<span class="badge badge-pending">Menunggu</span>',
                         };
                     ?>
-                        <div class="panel" style="padding:16px 18px;<?= $l['moderation'] === 'pending' ? 'border-color:rgba(251,191,36,.35);' : '' ?>">
+                        <div class="row-item">
                             <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
                                 <div class="card-media" style="width:66px;height:66px;flex:none;aspect-ratio:1;border-radius:10px;">
                                     <?php if ($l['image']): ?>

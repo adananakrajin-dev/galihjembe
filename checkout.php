@@ -155,7 +155,7 @@ include 'includes/header.php';
             <div class="grid-2" style="align-items:start;">
 
                 <!-- Ringkasan pesanan -->
-                <div class="panel">
+                <div>
                     <h3 class="mb-2">Ringkasan Pesanan</h3>
                     <div class="order-summary">
                         <div class="summary-row" style="color:var(--text);font-weight:600;">
@@ -189,7 +189,7 @@ include 'includes/header.php';
                 </div>
 
                 <!-- Metode pembayaran / status -->
-                <div class="panel">
+                <div>
                     <?php if ($proof): ?>
                         <!-- Sudah upload bukti -->
                         <h3 class="mb-2">Bukti Terkirim</h3>

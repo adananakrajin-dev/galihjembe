@@ -123,7 +123,7 @@ include 'includes/header.php';
             <div class="grid-2" style="align-items:start;">
 
                 <!-- Form buat brief -->
-                <div class="panel">
+                <div>
                     <h3 class="mb-2">Buat Brief Baru</h3>
 
                     <?php if ($error): ?>
@@ -190,7 +190,7 @@ include 'includes/header.php';
 
                 <!-- Daftar brief saya -->
                 <div>
-                    <div class="panel">
+                    <div>
                         <h3 class="mb-2">Brief Saya (<?= count($briefs) ?>)</h3>
 
                         <?php if (!$briefs): ?>

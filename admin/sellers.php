@@ -70,7 +70,7 @@ try {
                     <p>Pengajuan dari calon penjual akan muncul di sini.</p>
                 </div>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="row-list">
                     <?php foreach ($profiles as $p):
                         $badge = match ($p['approval']) {
                             'approved' => '<span class="badge badge-available">Disetujui</span>',
@@ -78,7 +78,7 @@ try {
                             default    => '<span class="badge badge-pending">Menunggu</span>',
                         };
                     ?>
-                        <div class="panel" style="padding:18px 20px;<?= $p['approval'] === 'pending' ? 'border-color:rgba(251,191,36,.35);' : '' ?>">
+                        <div class="row-item">
                             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;">
                                 <span class="mi-icon" style="border-radius:50%;font-weight:700;">
                                     <?= strtoupper(substr($p['store_name'], 0, 1)) ?>

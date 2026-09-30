@@ -110,7 +110,7 @@ include 'includes/header.php';
 
                 <!-- Ringkasan akun -->
                 <div>
-                    <div class="panel">
+                    <div>
                         <div class="feature" style="align-items:center;">
                             <span class="mi-icon" style="width:64px;height:64px;border-radius:50%;font-size:24px;font-weight:700;">
                                 <?= e($initial) ?>
@@ -154,7 +154,9 @@ include 'includes/header.php';
                     </div>
 
                     <?php if ($profile): ?>
-                        <div class="panel mt-3">
+                        <div class="divider"></div>
+
+                        <div>
                             <div class="feature">
                                 <span class="mi-icon">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16v13H4z"/><path d="M4 11h16M9 7V4h6v3"/></svg>
@@ -175,7 +177,7 @@ include 'includes/header.php';
 
                 <!-- Form data diri + password -->
                 <div>
-                    <div class="panel">
+                    <div>
                         <h3 class="mb-2">Data Diri</h3>
                         <form action="profile.php" method="POST" class="form">
                             <?= csrf_field() ?>
@@ -204,7 +206,9 @@ include 'includes/header.php';
                         </form>
                     </div>
 
-                    <div class="panel mt-3">
+                    <div class="divider"></div>
+
+                    <div>
                         <h3 class="mb-2">Ganti Password</h3>
                         <form action="profile.php" method="POST" class="form">
                             <?= csrf_field() ?>

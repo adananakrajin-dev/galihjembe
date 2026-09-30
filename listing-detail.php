@@ -149,7 +149,7 @@ include 'includes/header.php';
 
                 <!-- Kolom kiri: media + deskripsi -->
                 <div>
-                    <div class="panel" style="padding:14px;">
+                    <div>
                         <div class="card-media" style="border-radius:12px;aspect-ratio:16/10;">
                             <?php if ($primary_image): ?>
                                 <img src="uploads/<?= e($primary_image) ?>" alt="<?= e($listing['title']) ?>">
@@ -169,7 +169,9 @@ include 'includes/header.php';
                         <?php endif; ?>
                     </div>
 
-                    <div class="panel mt-3">
+                    <div class="divider"></div>
+
+                    <div>
                         <h3><?= e($listing['title']) ?></h3>
                         <div class="card-meta" style="margin-top:8px;">
                             <?php if ($avg_rating > 0): ?>
@@ -203,7 +205,9 @@ include 'includes/header.php';
 
                     <!-- Paket jasa -->
                     <?php if ($is_service && $packages): ?>
-                        <div class="panel mt-3" id="paket">
+                        <div class="divider"></div>
+
+                        <div id="paket">
                             <h3 class="mb-2">Paket Layanan</h3>
                             <div class="grid-3" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
                                 <?php foreach ($packages as $p): ?>
@@ -237,7 +241,9 @@ include 'includes/header.php';
                     <?php endif; ?>
 
                     <!-- Ulasan -->
-                    <div class="panel mt-3">
+                    <div class="divider"></div>
+
+                    <div>
                         <h3 class="mb-2">Ulasan Pembeli</h3>
                         <?php if (!$reviews): ?>
                             <p class="faint">Belum ada ulasan untuk listing ini.</p>
@@ -310,7 +316,9 @@ include 'includes/header.php';
                     </div>
 
                     <!-- Kartu penjual -->
-                    <div class="panel mt-3">
+                    <div class="divider"></div>
+
+                    <div>
                         <div class="feature">
                             <span class="mi-icon" style="border-radius:50%;">
                                 <?= strtoupper(substr($listing['store_name'], 0, 1)) ?>
@@ -346,7 +354,7 @@ include 'includes/header.php';
 
                     <!-- Laporan -->
                     <?php if (is_logged() && !$is_owner): ?>
-                        <details class="panel mt-3" style="padding:16px 18px;">
+                        <details class="mt-3" style="border-top:1px solid var(--border);padding-top:14px;">
                             <summary style="cursor:pointer;font-size:13px;color:var(--faint);">Laporkan listing ini</summary>
                             <form method="POST" action="listing-detail.php?id=<?= $id ?>" class="mt-2">
                                 <?= csrf_field() ?>

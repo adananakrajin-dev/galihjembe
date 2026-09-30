@@ -50,7 +50,7 @@ try {
                     <p>Bersih — belum ada laporan masuk.</p>
                 </div>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="row-list">
                     <?php foreach ($reports as $r):
                         $badge = match ($r['status']) {
                             'resolved' => '<span class="badge badge-available">Selesai</span>',
@@ -58,7 +58,7 @@ try {
                             default    => '<span class="badge badge-pending">Menunggu</span>',
                         };
                     ?>
-                        <div class="panel" style="padding:16px 18px;<?= $r['status'] === 'pending' ? 'border-color:rgba(248,113,113,.4);' : '' ?>">
+                        <div class="row-item">
                             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;">
                                 <div style="flex:1;min-width:220px;">
                                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">

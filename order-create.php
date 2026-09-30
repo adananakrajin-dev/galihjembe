@@ -164,7 +164,7 @@ include 'includes/header.php';
 
             <div class="grid-2" style="align-items:start;">
                 <!-- Ringkasan -->
-                <div class="panel">
+                <div>
                     <h3 class="mb-2">Ringkasan Pesanan</h3>
                     <div class="order-summary">
                         <div class="summary-row" style="color:var(--text);font-weight:600;">
@@ -184,7 +184,7 @@ include 'includes/header.php';
                 </div>
 
                 <!-- Form -->
-                <div class="panel">
+                <div>
                     <h3 class="mb-2">Data Pengiriman / Catatan</h3>
                     <form action="order-create.php?listing=<?= $listing_id ?>&package=<?= $package_id ?>&brief=<?= $brief_id ?>"
                           method="POST" class="form">

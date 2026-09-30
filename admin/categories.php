@@ -64,7 +64,7 @@ try {
     <section class="section" style="padding-top:8px;">
         <div class="container">
             <div class="grid-2" style="align-items:start;">
-                <div class="panel">
+                <div>
                     <h3 class="mb-2">Tambah Kategori</h3>
                     <form action="categories.php" method="POST" class="form">
                         <?= csrf_field() ?>
@@ -85,7 +85,7 @@ try {
                     </form>
                 </div>
 
-                <div class="panel">
+                <div>
                     <h3 class="mb-2">Daftar Kategori (<?= count($cats) ?>)</h3>
                     <?php if (!$cats): ?>
                         <p class="faint">Belum ada kategori.</p>

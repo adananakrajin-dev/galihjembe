@@ -95,7 +95,7 @@ include 'includes/header.php';
                     <a href="listing-form.php" class="btn btn-primary mt-3">Buat Listing Pertama</a>
                 </div>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="row-list">
                     <?php foreach ($items as $l):
                         $mod_badge = match ($l['moderation']) {
                             'approved' => '<span class="badge badge-available">Disetujui</span>',
@@ -103,7 +103,7 @@ include 'includes/header.php';
                             default    => '<span class="badge badge-pending">Menunggu Moderasi</span>',
                         };
                     ?>
-                        <div class="panel" style="padding:16px 18px;">
+                        <div class="row-item">
                             <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
                                 <div class="card-media" style="width:70px;height:70px;flex:none;aspect-ratio:1;border-radius:10px;">
                                     <?php if ($l['image']): ?>

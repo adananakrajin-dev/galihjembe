@@ -124,7 +124,7 @@ include 'includes/header.php';
                     <a href="my-listings.php" class="btn btn-soft mt-3">Kelola Listing</a>
                 </div>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="row-list">
                     <?php foreach ($orders as $o):
                         $can = [
                             'proses' => $o['status'] === 'diverifikasi',
@@ -132,7 +132,7 @@ include 'includes/header.php';
                             'batal' => in_array($o['status'], ['menunggu_bukti', 'diverifikasi'], true),
                         ];
                     ?>
-                        <div class="panel" style="padding:18px 20px;">
+                        <div class="row-item">
                             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;">
                                 <div style="flex:1;min-width:220px;">
                                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -217,9 +217,9 @@ include 'includes/header.php';
                     <p>Brief custom dari pembeli akan muncul di sini untuk kamu beri penawaran.</p>
                 </div>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="row-list">
                     <?php foreach ($briefs as $b): ?>
-                        <div class="panel" style="padding:18px 20px;">
+                        <div class="row-item">
                             <div style="display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;align-items:flex-start;">
                                 <div style="flex:1;min-width:220px;">
                                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">

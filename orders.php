@@ -75,11 +75,11 @@ include 'includes/header.php';
                     <a href="listings.php" class="btn btn-primary mt-3">Buka Katalog</a>
                 </div>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="row-list">
                     <?php foreach ($orders as $o):
                         $can_pay = $o['status'] === 'menunggu_bukti' && empty($o['payment_proof']);
                     ?>
-                        <div class="panel" style="padding:18px 20px;">
+                        <div class="row-item">
                             <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
                                 <!-- Thumbnail -->
                                 <div class="card-media" style="width:74px;height:74px;flex:none;aspect-ratio:1;border-radius:10px;">

@@ -107,7 +107,7 @@ include 'includes/header.php';
 
                 <!-- Kiri: detail + timeline -->
                 <div>
-                    <div class="panel">
+                    <div>
                         <h3 class="mb-2">Detail Pesanan</h3>
                         <div class="order-summary">
                             <div class="summary-row" style="color:var(--text);font-weight:600;">
@@ -145,7 +145,7 @@ include 'includes/header.php';
                         <?php endif; ?>
                     </div>
 
-                    <div class="panel mt-3">
+                    <div class="mt-3">
                         <h3 class="mb-2">Status Pesanan</h3>
                         <?php if ($order['status'] === 'batal'): ?>
                             <div class="alert alert-danger">
@@ -189,7 +189,7 @@ include 'includes/header.php';
                 <!-- Kanan: aksi pembayaran / review -->
                 <div>
                     <?php if ($order['status'] === 'menunggu_bukti'): ?>
-                        <div class="panel">
+                        <div>
                             <h3 class="mb-2">Pembayaran</h3>
                             <?php if (!$order['payment_proof']): ?>
                                 <p class="faint mb-2">Belum ada bukti pembayaran. Pilih metode & upload bukti dulu.</p>
@@ -207,7 +207,7 @@ include 'includes/header.php';
                     <?php endif; ?>
 
                     <?php if ($order['status'] === 'selesai'): ?>
-                        <div class="panel">
+                        <div class="mt-3">
                             <h3 class="mb-2">Beri Ulasan</h3>
                             <?php if ($has_review): ?>
                                 <div class="alert alert-success">
@@ -239,7 +239,7 @@ include 'includes/header.php';
                     <?php endif; ?>
 
                     <?php if ($order['payment_method'] || $order['status'] !== 'menunggu_bukti'): ?>
-                        <div class="panel mt-3">
+                        <div class="mt-3">
                             <div class="feature">
                                 <span class="mi-icon">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg>

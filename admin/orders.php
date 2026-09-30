@@ -75,12 +75,12 @@ try {
                     <p>Pesanan dari pembeli akan muncul di sini.</p>
                 </div>
             <?php else: ?>
-                <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="row-list">
                     <?php foreach ($orders as $o):
                         $awaiting = $o['status'] === 'menunggu_bukti' && !empty($o['payment_proof']);
                         $no_proof = $o['status'] === 'menunggu_bukti' && empty($o['payment_proof']);
                     ?>
-                        <div class="panel" style="padding:16px 18px;<?= $awaiting ? 'border-color:rgba(52,211,153,.4);' : '' ?>">
+                        <div class="row-item">
                             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;">
                                 <div style="flex:1;min-width:230px;">
                                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">

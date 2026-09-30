@@ -254,7 +254,7 @@ include 'includes/header.php';
 
                 <div class="grid-2" style="align-items:start;">
                     <!-- Info utama -->
-                    <div class="panel">
+                    <div>
                         <h3 class="mb-2">Informasi Utama</h3>
 
                         <div class="field mb-2">
@@ -334,7 +334,7 @@ include 'includes/header.php';
 
                     <!-- Foto + paket -->
                     <div>
-                        <div class="panel">
+                        <div>
                             <h3 class="mb-2">Foto</h3>
                             <div class="field mb-2">
                                 <label for="images">Upload Foto (maks 5 total, 2MB/foto, JPG/PNG/WebP)</label>
@@ -360,7 +360,8 @@ include 'includes/header.php';
                             <?php endif; ?>
                         </div>
 
-                        <div class="panel mt-3" id="packageBox" style="<?= $type_val === 'service' ? '' : 'display:none;' ?>">
+                        <div id="packageBox" style="<?= $type_val === 'service' ? '' : 'display:none;' ?>">
+                            <div class="divider"></div>
                             <h3 class="mb-1">Paket Harga <span class="faint" style="text-transform:none;letter-spacing:0;">(opsional — Basic/Pro/Enterprise)</span></h3>
                             <p class="faint mb-2">Isi nama &amp; harga untuk membuat paket. Kosongkan untuk melewati.</p>
 
@@ -424,7 +425,7 @@ include 'includes/header.php';
                     </div>
                 </div>
 
-                <div class="panel mt-3" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:flex-end;">
+                <div class="mt-3" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:flex-end;border-top:1px solid var(--border);padding-top:18px;">
                     <a href="my-listings.php" class="btn btn-ghost">Batal</a>
                     <button type="submit" name="simpan" class="btn btn-primary">
                         <?= $is_edit ? 'Simpan Perubahan' : 'Buat Listing' ?>
