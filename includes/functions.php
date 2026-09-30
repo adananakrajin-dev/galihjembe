@@ -264,6 +264,44 @@ function status_badge(array $l): string {
     return '<span class="badge badge-available">Tersedia</span>';
 }
 
+/**
+ * Validasi cascade wilayah (provinsi → kabupaten → kecamatan) terhadap dataset
+ * assets/data/wilayah.json. Semua kosong dianggap valid (field opsional);
+ * bila salah satu terisi, ketiganya wajib lengkap dan konsisten.
+ * @return bool
+ */
+function wilayah_check(string $province, string $regency, string $district): bool
+{
+    if ($province === '' && $regency === '' && $district === '') { return true; }
+    if ($province === '' || $regency === '' || $district === '') { return false; }
+
+    static $data = null;
+    if ($data === null) {
+        $path = __DIR__ . '/../assets/data/wilayah.json';
+        $raw  = @file_get_contents($path);
+        $decoded = $raw !== false ? json_decode($raw, true) : null;
+        $data = (is_array($decoded) && isset($decoded['provinces'])) ? $decoded : false;
+    }
+    if ($data === false) { return false; } // dataset belum tersedia
+
+    $pid = null;
+    foreach ($data['provinces'] as $p) {
+        if (($p[1] ?? '') === $province) { $pid = $p[0]; break; }
+    }
+    if ($pid === null) { return false; }
+
+    $rid = null;
+    foreach (($data['regencies'][$pid] ?? []) as $r) {
+        if (($r[1] ?? '') === $regency) { $rid = $r[0]; break; }
+    }
+    if ($rid === null) { return false; }
+
+    foreach (($data['districts'][$rid] ?? []) as $d) {
+        if (($d[1] ?? '') === $district) { return true; }
+    }
+    return false;
+}
+
 /** Render satu kartu listing. Kolom yang dibutuhkan: id, title, price, type, status, moderation, image (opsional), category_name (opsional), store_name (opsional). */
 function listing_card(array $l, string $base = ''): string {
     $img = !empty($l['image'])

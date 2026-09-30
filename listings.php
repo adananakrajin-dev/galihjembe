@@ -7,6 +7,8 @@ $q    = trim($_GET['q'] ?? '');
 $cat  = trim($_GET['cat'] ?? '');
 $type = in_array($_GET['type'] ?? '', ['product', 'service'], true) ? $_GET['type'] : '';
 $sort = $_GET['sort'] ?? 'terbaru';
+$prov = trim($_GET['prov'] ?? '');
+$kab  = trim($_GET['kab'] ?? '');
 $page = max(1, (int)($_GET['page'] ?? 1));
 $per_page = 12;
 
@@ -30,6 +32,16 @@ if ($type !== '') {
     $where[] = 'l.type = ?';
     $types  .= 's';
     $args[]   = $type;
+}
+if ($prov !== '') {
+    $where[] = 'l.province = ?';
+    $types  .= 's';
+    $args[]   = $prov;
+}
+if ($kab !== '') {
+    $where[] = 'l.regency = ?';
+    $types  .= 's';
+    $args[]   = $kab;
 }
 
 $where_sql = implode(' AND ', $where);
@@ -109,6 +121,8 @@ include 'includes/header.php';
                 <input class="input" type="search" name="q" value="<?= e($q) ?>" placeholder="Cari jasa atau produk..." aria-label="Cari">
                 <?php if ($cat): ?><input type="hidden" name="cat" value="<?= e($cat) ?>"><?php endif; ?>
                 <?php if ($type): ?><input type="hidden" name="type" value="<?= e($type) ?>"><?php endif; ?>
+                <?php if ($prov): ?><input type="hidden" name="prov" value="<?= e($prov) ?>"><?php endif; ?>
+                <?php if ($kab): ?><input type="hidden" name="kab" value="<?= e($kab) ?>"><?php endif; ?>
                 <button class="btn btn-primary" type="submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
@@ -135,12 +149,22 @@ include 'includes/header.php';
                 <a class="btn btn-sm <?= $type === 'product' ? 'btn-primary' : 'btn-soft' ?>"
                    href="<?= e(listings_url(['type' => 'product', 'page' => ''])) ?>">Produk</a>
 
-                <form method="get" action="listings.php" style="margin-left:auto;display:flex;gap:8px;">
+                <div id="katalogLocError" style="width:100%;"></div>
+                <form method="get" action="listings.php" style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
                     <?php foreach ($_GET as $k => $v): ?>
-                        <?php if ($k !== 'sort' && $k !== 'page'): ?>
+                        <?php if (!in_array($k, ['sort', 'page', 'prov', 'kab'], true)): ?>
                             <input type="hidden" name="<?= e($k) ?>" value="<?= e((string)$v) ?>">
                         <?php endif; ?>
                     <?php endforeach; ?>
+                    <div data-wilayah="katalogLocError" data-wilayah-submit="change"
+                         data-wilayah-ids="f_province,f_regency" style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <select id="f_province" name="prov" class="input"
+                                style="min-height:36px;padding:6px 10px;font-size:13px;width:auto;max-width:180px;"
+                                data-placeholder="Semua Lokasi" data-selected="<?= e($prov) ?>"></select>
+                        <select id="f_regency" name="kab" class="input"
+                                style="min-height:36px;padding:6px 10px;font-size:13px;width:auto;max-width:180px;"
+                                data-placeholder="Semua Kab/Kota" data-selected="<?= e($kab) ?>"></select>
+                    </div>
                     <select name="sort" class="input" style="min-height:36px;padding:6px 10px;font-size:13px;width:auto;" onchange="this.form.submit()">
                         <option value="terbaru" <?= $sort === 'terbaru' ? 'selected' : '' ?>>Terbaru</option>
                         <option value="termurah" <?= $sort === 'termurah' ? 'selected' : '' ?>>Harga Termurah</option>

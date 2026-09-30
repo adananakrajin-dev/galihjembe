@@ -177,10 +177,18 @@ include 'includes/header.php';
                             <?php if ($avg_rating > 0): ?>
                                 <span class="badge badge-pending">★ <?= e((string)$avg_rating) ?> (<?= count($reviews) ?> ulasan)</span>
                             <?php endif; ?>
-                            <?php if ($listing['location']): ?>
+                            <?php
+                            // Lokasi publik: berhenti di kecamatan (RT/RW tidak dipublikasikan);
+                            // listing lama tanpa cascade jatuh ke kolom teks `location`.
+                            $loc_public = (!empty($listing['district']) && !empty($listing['regency']))
+                                ? 'Kec. ' . $listing['district'] . ', ' . $listing['regency']
+                                  . (!empty($listing['province']) ? ', ' . $listing['province'] : '')
+                                : trim($listing['location'] ?? '');
+                            ?>
+                            <?php if ($loc_public !== ''): ?>
                                 <span>
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                                    <?= e($listing['location']) ?>
+                                    <?= e($loc_public) ?>
                                 </span>
                             <?php endif; ?>
                             <?php if (!$is_service && $listing['condition']): ?>

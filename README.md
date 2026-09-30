@@ -11,7 +11,7 @@ unggah bukti → diverifikasi admin → seller memproses → selesai → review.
 
 **Umum**
 - Register (role `buyer`) → login → logout; password di-hash `password_hash()`
-- Katalog dengan pencarian, filter kategori/tipe/harga, paginasi
+- Katalog dengan pencarian, filter kategori/tipe/harga/**lokasi (provinsi → kabupaten)**, paginasi
 - Detail listing: galeri foto, paket harga (jasa), favorit, laporan, tombol WhatsApp
 - Profil (edit data + ganti password), daftar favorit, riwayat pesanan + review bintang
 - Halaman statis (kontak, kredit, berita, portofolio, dll.) memakai design system yang sama
@@ -23,6 +23,8 @@ unggah bukti → diverifikasi admin → seller memproses → selesai → review.
 **Multi-Seller**
 - `become-seller.php`: buyer mengajukan toko → **disetujui/ditolak admin** (role sinkron otomatis tanpa re-login)
 - CRUD listing dengan upload foto (validasi MIME, maks 2 MB, nama acak)
+- Form listing: cascade **provinsi → kabupaten → kecamatan + RT/RW**
+  (wajib untuk produk, opsional untuk jasa; RT/RW disimpan tapi tidak dipublikasikan)
 - Semua listing baru masuk **moderasi** (`pending` → admin `approve/reject`)
 - `my-listings.php`, `seller-orders.php` (pesanan masuk + quote brief): proses → selesai
 
@@ -58,6 +60,8 @@ bisnis/
 │   └── header.php / footer.php    # Navbar/footer (pakai $base agar bisa dari admin/)
 ├── assets/css/style.css           # Design system tunggal (tema terang, responsif)
 ├── assets/js/main.js              # Navigasi, konfirmasi, dll. (vanilla)
+├── assets/js/wilayah.js           # Cascade wilayah (prov→kab→kec, cache localStorage)
+├── assets/data/wilayah.json       # Dataset wilayah ID — sumber emsifa/api-wilayah-indonesia (MIT)
 ├── database/
 │   ├── schema.sql                 # Skema 12 tabel + seed kategori
 │   └── migrate.php                # Migrasi idempotent (CLI / localhost)

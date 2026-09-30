@@ -89,10 +89,36 @@ if (isset($_POST['buat_order'])) {
 
     $address = trim($_POST['address'] ?? '');
     $notes   = trim($_POST['notes'] ?? '');
+    $province = trim($_POST['province'] ?? '');
+    $regency  = trim($_POST['regency'] ?? '');
+    $district = trim($_POST['district'] ?? '');
+    $rt       = trim($_POST['rt'] ?? '');
+    $rw       = trim($_POST['rw'] ?? '');
+    $loc_given = ($province !== '' || $regency !== '' || $district !== '');
 
-    if ($is_product && $address === '') {
-        $error = 'Alamat pengiriman wajib diisi untuk produk fisik.';
+    if ($is_product && !$loc_given) {
+        $error = 'Alamat: pilih provinsi, kabupaten/kota, dan kecamatan.';
+    } elseif ($loc_given && !wilayah_check($province, $regency, $district)) {
+        $error = 'Alamat lokasi tidak lengkap atau tidak ada di daftar — pilih kembali.';
+    } elseif ($is_product && $address === '') {
+        $error = 'Detail alamat pengiriman (nama penerima & jalan/no.) wajib diisi.';
+    } elseif (($rt !== '' && !preg_match('/^[0-9]{1,3}$/', $rt))
+              || ($rw !== '' && !preg_match('/^[0-9]{1,3}$/', $rw))) {
+        $error = 'RT/RW hanya boleh angka (maksimal 3 digit).';
     } else {
+        // Susun alamat final: baris 1 detail, baris 2 RT/RW + lokasi cascade
+        if ($loc_given || $rt !== '' || $rw !== '') {
+            $rtw = trim(($rt !== '' ? 'RT ' . $rt : '')
+                      . (($rt !== '' && $rw !== '') ? '/' : '')
+                      . ($rw !== '' ? 'RW ' . $rw : ''));
+            $loc_line = $loc_given
+                ? trim('Kec. ' . $district . ', ' . $regency . ', ' . $province)
+                : '';
+            $line2 = trim($rtw . ($rtw !== '' && $loc_line !== '' ? ', ' : '') . $loc_line);
+            if ($line2 !== '') {
+                $address = $address === '' ? $line2 : $address . "\n" . $line2;
+            }
+        }
         // Kode order unik: ORD-YYMMDD-XXXX
         $order_code = '';
         for ($i = 0; $i < 5; $i++) {
@@ -196,8 +222,41 @@ include 'includes/header.php';
                         <?php if ($is_product): ?>
                             <div class="field">
                                 <label for="address">Alamat Pengiriman</label>
-                                <textarea id="address" name="address" required
-                                          placeholder="Nama penerima, no. HP, alamat lengkap"><?= e($_POST['address'] ?? '') ?></textarea>
+                                <div id="orderLocError" class="mb-1"></div>
+                                <div data-wilayah="orderLocError" data-wilayah-block="1">
+                                    <div class="field mb-2">
+                                        <label for="province">Provinsi <span class="faint">(wajib)</span></label>
+                                        <select id="province" name="province" required
+                                                data-placeholder="Pilih Provinsi"
+                                                data-selected="<?= e($_POST['province'] ?? '') ?>"></select>
+                                    </div>
+                                    <div class="field mb-2">
+                                        <label for="regency">Kabupaten / Kota <span class="faint">(wajib)</span></label>
+                                        <select id="regency" name="regency" required
+                                                data-placeholder="Pilih Kabupaten/Kota"
+                                                data-selected="<?= e($_POST['regency'] ?? '') ?>"></select>
+                                    </div>
+                                    <div class="field mb-2">
+                                        <label for="district">Kecamatan <span class="faint">(wajib)</span></label>
+                                        <select id="district" name="district" required
+                                                data-placeholder="Pilih Kecamatan"
+                                                data-selected="<?= e($_POST['district'] ?? '') ?>"></select>
+                                    </div>
+                                    <div class="form-row" style="gap:12px;">
+                                        <div class="field">
+                                            <label for="rt">RT <span class="faint">(opsional)</span></label>
+                                            <input id="rt" name="rt" inputmode="numeric" maxlength="3" placeholder="001"
+                                                   value="<?= e($_POST['rt'] ?? '') ?>">
+                                        </div>
+                                        <div class="field">
+                                            <label for="rw">RW <span class="faint">(opsional)</span></label>
+                                            <input id="rw" name="rw" inputmode="numeric" maxlength="3" placeholder="001"
+                                                   value="<?= e($_POST['rw'] ?? '') ?>">
+                                        </div>
+                                    </div>
+                                </div>
+                                <textarea id="address" name="address" required style="margin-top:12px;"
+                                          placeholder="Nama penerima, no. HP, jalan / nomor rumah"><?= e($_POST['address'] ?? '') ?></textarea>
                                 <span class="hint">Barang dikirim setelah pembayaran diverifikasi (pengiriman diurus di luar platform).</span>
                             </div>
                         <?php endif; ?>

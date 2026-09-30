@@ -64,6 +64,11 @@ CREATE TABLE IF NOT EXISTS listings (
     price       DECIMAL(15,2) NOT NULL DEFAULT 0, -- harga dasar / mulai
     `condition` ENUM('baru','seperti-baru','bekas-baik','bekas-cukup') NULL, -- produk saja
     location    VARCHAR(100) NULL,
+    province    VARCHAR(100) NULL,                -- cascade wilayah: nama provinsi
+    regency     VARCHAR(100) NULL,                -- nama kabupaten / kota
+    district    VARCHAR(100) NULL,                -- nama kecamatan
+    rt          VARCHAR(10)  NULL,                -- RT (disimpan, tidak dipublikasikan)
+    rw          VARCHAR(10)  NULL,                -- RW (disimpan, tidak dipublikasikan)
     website     VARCHAR(255) NULL,                -- link demo/portofolio (jasa)
     stack       VARCHAR(150) NULL,                -- teknologi (jasa)
     status      ENUM('available','sold','inactive') NOT NULL DEFAULT 'available',

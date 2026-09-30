@@ -9,8 +9,9 @@
  * Yang dilakukan:
  *   1. Menjalankan seluruh statement di database/schema.sql
  *      (CREATE TABLE IF NOT EXISTS + seed kategori & pengaturan)
- *   2. Menambahkan kolom baru pada tabel `users` lama bila ada
- *      (name, email, phone, location, avatar, role, status, dll.)
+ *   2. Menambahkan kolom baru pada tabel `users` & `listings` lama bila ada
+ *      (users: name, email, phone, location, avatar, role, status, dll.)
+ *      (listings: province, regency, district, rt, rw — cascade wilayah)
  *   3. Membuat akun admin default bila belum ada (admin / admin123)
  */
 
@@ -100,6 +101,36 @@ try {
     }
 } catch (Throwable $e) {
     echo "Cek tabel users gagal: {$e->getMessage()}\n";
+    $fail++;
+}
+
+// ── 2b. Kolom cascade wilayah untuk tabel listings lama ──
+$listing_wanted = [
+    'province' => "ADD COLUMN `province` VARCHAR(100) NULL AFTER `location`",
+    'regency'  => "ADD COLUMN `regency` VARCHAR(100) NULL AFTER `province`",
+    'district' => "ADD COLUMN `district` VARCHAR(100) NULL AFTER `regency`",
+    'rt'       => "ADD COLUMN `rt` VARCHAR(10) NULL AFTER `district`",
+    'rw'       => "ADD COLUMN `rw` VARCHAR(10) NULL AFTER `rt`",
+];
+
+try {
+    $res = $db->query("SHOW COLUMNS FROM listings");
+    $existing = [];
+    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
+
+    foreach ($listing_wanted as $col => $ddl) {
+        if (isset($existing[$col])) { continue; }
+        try {
+            $db->query("ALTER TABLE listings " . $ddl);
+            $added++;
+            echo "listings: kolom `{$col}` ditambahkan\n";
+        } catch (Throwable $e) {
+            echo "listings: gagal menambah kolom `{$col}` — {$e->getMessage()}\n";
+            $fail++;
+        }
+    }
+} catch (Throwable $e) {
+    echo "Cek tabel listings gagal: {$e->getMessage()}\n";
     $fail++;
 }
 

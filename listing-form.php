@@ -65,9 +65,19 @@ if (isset($_POST['simpan'])) {
     $cat_id      = (int)($_POST['category_id'] ?? 0);
     $condition   = in_array($_POST['condition'] ?? '', ['baru', 'seperti-baru', 'bekas-baik', 'bekas-cukup'], true)
                  ? $_POST['condition'] : null;
-    $location    = trim($_POST['location'] ?? '');
     $website     = trim($_POST['website'] ?? '');
     $stack       = trim($_POST['stack'] ?? '');
+
+    // ── Lokasi cascade (provinsi → kabupaten → kecamatan) + RT/RW ──
+    $province = trim($_POST['province'] ?? '');
+    $regency  = trim($_POST['regency'] ?? '');
+    $district = trim($_POST['district'] ?? '');
+    $rt       = trim($_POST['rt'] ?? '');
+    $rw       = trim($_POST['rw'] ?? '');
+    // Kolom legacy `location`: turunan cascade; saat edit, isian lama dipertahankan
+    $location = ($district !== '' && $regency !== '')
+        ? $district . ', ' . $regency
+        : trim($old['location'] ?? '');
 
     // ── Validasi ──
     if (strlen($title) < 5 || strlen($title) > 150) {
@@ -78,6 +88,14 @@ if (isset($_POST['simpan'])) {
         $error = 'Harga harus lebih dari 0.';
     } elseif ($type === 'product' && !$condition) {
         $error = 'Pilih kondisi produk.';
+    } elseif ($type === 'product' && ($province === '' || $regency === '' || $district === '')) {
+        $error = 'Lokasi wajib untuk produk: pilih provinsi, kabupaten/kota, dan kecamatan.';
+    } elseif (($province !== '' || $regency !== '' || $district !== '')
+              && !wilayah_check($province, $regency, $district)) {
+        $error = 'Lokasi tidak lengkap atau tidak ada di daftar — pilih kembali provinsi sampai kecamatan.';
+    } elseif (($rt !== '' && !preg_match('/^[0-9]{1,3}$/', $rt))
+              || ($rw !== '' && !preg_match('/^[0-9]{1,3}$/', $rw))) {
+        $error = 'RT/RW hanya boleh angka (maksimal 3 digit).';
     } elseif ($cat_id > 0 && !db_one($db, 'SELECT id FROM categories WHERE id = ?', 'i', $cat_id)) {
         $error = 'Kategori tidak valid.';
     }
@@ -143,13 +161,15 @@ if (isset($_POST['simpan'])) {
             $moderation = $re_moderate ? 'pending' : $old['moderation'];
             $stmt = $db->prepare(
                 'UPDATE listings SET type=?, title=?, description=?, price=?, category_id=?,
-                        `condition`=?, location=?, website=?, stack=?, moderation=?
+                        `condition`=?, location=?, website=?, stack=?, moderation=?,
+                        province=?, regency=?, district=?, rt=?, rw=?
                  WHERE id=? AND seller_id=?'
             );
             $stmt->bind_param(
-                'sssdississii',
+                'sssd' . 'i' . str_repeat('s', 10) . 'ii',
                 $type, $title, $description, $price, $cat_bind,
-                $condition, $location, $website, $stack, $moderation, $id, $seller_id
+                $condition, $location, $website, $stack, $moderation,
+                $province, $regency, $district, $rt, $rw, $id, $seller_id
             );
             $stmt->execute();
             $stmt->close();
@@ -158,13 +178,15 @@ if (isset($_POST['simpan'])) {
         } else {
             $stmt = $db->prepare(
                 'INSERT INTO listings (seller_id, category_id, type, title, description, price,
-                                       `condition`, location, website, stack, moderation)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "pending")'
+                                       `condition`, location, website, stack, moderation,
+                                       province, regency, district, rt, rw)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "pending", ?, ?, ?, ?, ?)'
             );
             $stmt->bind_param(
-                'iissdsssss',
+                'ii' . 'sss' . 'd' . str_repeat('s', 9),
                 $seller_id, $cat_bind, $type, $title, $description, $price,
-                $condition, $location, $website, $stack
+                $condition, $location, $website, $stack,
+                $province, $regency, $district, $rt, $rw
             );
             $stmt->execute();
             $listing_id = $stmt->insert_id;
@@ -320,9 +342,34 @@ include 'includes/header.php';
                         </div>
 
                         <div class="field mb-2">
-                            <label for="location">Lokasi <span class="faint">(opsional)</span></label>
-                            <input id="location" type="text" name="location" placeholder="Jakarta Selatan"
-                                   value="<?= e($v('location')) ?>">
+                            <label>Lokasi <span class="faint" id="locHintText">(wajib untuk produk)</span></label>
+                            <div id="locError" class="mb-2"></div>
+                            <div data-wilayah="locError" data-wilayah-block="1">
+                                <div class="field mb-2">
+                                    <select id="province" name="province" data-placeholder="Pilih Provinsi"
+                                            data-selected="<?= e($v('province')) ?>"></select>
+                                </div>
+                                <div class="field mb-2">
+                                    <select id="regency" name="regency" data-placeholder="Pilih Kabupaten/Kota"
+                                            data-selected="<?= e($v('regency')) ?>"></select>
+                                </div>
+                                <div class="field mb-2">
+                                    <select id="district" name="district" data-placeholder="Pilih Kecamatan"
+                                            data-selected="<?= e($v('district')) ?>"></select>
+                                </div>
+                                <div class="form-row" style="gap:12px;">
+                                    <div class="field">
+                                        <label for="rt">RT <span class="faint">(opsional)</span></label>
+                                        <input id="rt" name="rt" inputmode="numeric" maxlength="3" placeholder="001"
+                                               value="<?= e($v('rt')) ?>">
+                                    </div>
+                                    <div class="field">
+                                        <label for="rw">RW <span class="faint">(opsional)</span></label>
+                                        <input id="rw" name="rw" inputmode="numeric" maxlength="3" placeholder="001"
+                                               value="<?= e($v('rw')) ?>">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="field">
@@ -447,6 +494,14 @@ include 'includes/header.php';
         document.getElementById('stackField').style.display = isProduct ? 'none' : '';
         document.getElementById('websiteField').style.display = isProduct ? 'none' : '';
         document.getElementById('packageBox').style.display = isProduct ? 'none' : '';
+
+        // Lokasi: wajib untuk produk, opsional untuk jasa (server tetap validasi)
+        ['province', 'regency', 'district'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) { el.required = isProduct; }
+        });
+        var hint = document.getElementById('locHintText');
+        if (hint) { hint.textContent = isProduct ? '(wajib untuk produk)' : '(opsional untuk jasa)'; }
     }
     radios.forEach(function (r) { r.addEventListener('change', sync); });
     sync();
