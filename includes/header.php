@@ -7,6 +7,14 @@ $page_title = $page_title ?? 'SESSIONS';
 $active     = $active ?? '';
 $is_logged  = isset($_SESSION['sudah_login']);
 
+// Data user untuk avatar navbar (sekali per request; $db dari database.php pemanggil)
+$nav_user = null;
+if ($is_logged && isset($db) && isset($_SESSION['user_id'])) {
+    try {
+        $nav_user = db_one($db, 'SELECT name, username, avatar FROM users WHERE id = ?', 'i', (int)$_SESSION['user_id']);
+    } catch (Throwable $e) { $nav_user = null; }
+}
+
 // Prefix path relatif dari root situs ("" untuk halaman root, "../" untuk admin/, dst.)
 if (!isset($base)) {
     $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
@@ -50,6 +58,11 @@ if (!isset($base)) {
                 <a href="<?= $base ?>login.php" class="btn btn-ghost btn-sm">Masuk</a>
                 <a href="<?= $base ?>register.php" class="btn btn-primary btn-sm">Daftar</a>
             <?php else: ?>
+                <?php if ($nav_user): ?>
+                    <a href="<?= $base ?>profile.php" class="nav-avatar" title="Profil saya" aria-label="Profil saya">
+                        <?= avatar_html($nav_user['avatar'], $nav_user['name'] ?: $nav_user['username'], 30, $base) ?>
+                    </a>
+                <?php endif; ?>
                 <a href="<?= $base ?>dashboard.php" class="btn btn-ghost btn-sm">Dashboard</a>
                 <a href="<?= $base ?>logout.php" class="btn btn-soft btn-sm">Keluar</a>
             <?php endif; ?>
