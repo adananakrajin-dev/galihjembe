@@ -128,11 +128,15 @@ if (isset($_POST['lapor_review'])) {
 // ── Ambil listing (approved, atau milik sendiri / admin) ──
 $sql = "SELECT l.*,
                c.name AS category_name,
+               st.name AS subtype_name,
+               br.name AS brand_name,
                u.username, u.name AS seller_name, u.phone AS seller_phone,
                COALESCE(sp.store_name, u.username) AS store_name,
                sp.store_desc, sp.approval AS store_approval
         FROM listings l
         LEFT JOIN categories c ON c.id = l.category_id
+        LEFT JOIN listing_subtypes st ON st.id = l.subtype_id
+        LEFT JOIN listing_brands br ON br.id = l.brand_id
         LEFT JOIN users u ON u.id = l.seller_id
         LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id
         WHERE l.id = ?";
@@ -219,6 +223,12 @@ include 'includes/header.php';
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
                 <?php if ($listing['category_name']): ?>
                     <span class="badge badge-muted"><?= e($listing['category_name']) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($listing['subtype_name'])): ?>
+                    <span class="badge badge-muted"><?= e($listing['subtype_name']) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($listing['brand_name'])): ?>
+                    <span class="badge badge-brand"><?= e($listing['brand_name']) ?></span>
                 <?php endif; ?>
                 <span class="badge <?= $is_service ? 'badge-info' : 'badge-muted' ?>"><?= $is_service ? 'Jasa' : 'Produk' ?></span>
                 <?php if ($listing['moderation'] === 'pending'): ?>

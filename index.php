@@ -13,9 +13,12 @@ try {
     $featured_services = db_all(
         $db,
         'SELECT l.id, l.title, l.price, l.type, l.status, l.moderation, c.name AS category_name,
+                st.name AS subtype_name, br.name AS brand_name,
                 COALESCE(sp.store_name, u.username) AS store_name, img.image_url AS image
          FROM listings l
          LEFT JOIN categories c ON c.id = l.category_id
+         LEFT JOIN listing_subtypes st ON st.id = l.subtype_id
+         LEFT JOIN listing_brands br ON br.id = l.brand_id
          LEFT JOIN users u ON u.id = l.seller_id
          LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id
          LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1
@@ -25,9 +28,12 @@ try {
     $featured_products = db_all(
         $db,
         'SELECT l.id, l.title, l.price, l.type, l.status, l.moderation, c.name AS category_name,
+                st.name AS subtype_name, br.name AS brand_name,
                 COALESCE(sp.store_name, u.username) AS store_name, img.image_url AS image
          FROM listings l
          LEFT JOIN categories c ON c.id = l.category_id
+         LEFT JOIN listing_subtypes st ON st.id = l.subtype_id
+         LEFT JOIN listing_brands br ON br.id = l.brand_id
          LEFT JOIN users u ON u.id = l.seller_id
          LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id
          LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1

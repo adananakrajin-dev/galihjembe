@@ -9,6 +9,8 @@ $type = in_array($_GET['type'] ?? '', ['product', 'service'], true) ? $_GET['typ
 $sort = $_GET['sort'] ?? 'terbaru';
 $prov = trim($_GET['prov'] ?? '');
 $kab  = trim($_GET['kab'] ?? '');
+$sub   = (int)($_GET['sub'] ?? 0);    // filter subtipe (id listing_subtypes)
+$brand = (int)($_GET['brand'] ?? 0);  // filter merek (id listing_brands)
 $page = max(1, (int)($_GET['page'] ?? 1));
 $per_page = 12;
 
@@ -44,6 +46,45 @@ if ($kab !== '') {
     $args[]   = $kab;
 }
 
+// ── Validasi filter subtipe & merek (harus nyambung ke kategori / satu sama lain) ──
+$cat_id = 0;
+if ($cat !== '') {
+    try {
+        $crow = db_one($db, 'SELECT id FROM categories WHERE slug = ?', 's', $cat);
+        $cat_id = $crow ? (int)$crow['id'] : 0;
+    } catch (Throwable $e) { $cat_id = 0; }
+}
+if ($sub > 0) {
+    try { $srow = db_one($db, 'SELECT id, category_id FROM listing_subtypes WHERE id = ?', 'i', $sub); }
+    catch (Throwable $e) { $srow = null; }
+    if (!$srow || ($cat_id > 0 && (int)$srow['category_id'] !== $cat_id)) { $sub = 0; }
+}
+if ($brand > 0) {
+    try {
+        $brow = db_one(
+            $db,
+            'SELECT b.id, b.subtype_id, s.category_id
+             FROM listing_brands b
+             JOIN listing_subtypes s ON s.id = b.subtype_id
+             WHERE b.id = ?', 'i', $brand
+        );
+    } catch (Throwable $e) { $brow = null; }
+    $brand_ok = $brow
+        && ($sub <= 0 || (int)$brow['subtype_id'] === $sub)
+        && ($cat_id <= 0 || (int)$brow['category_id'] === $cat_id);
+    if (!$brand_ok) { $brand = 0; }
+}
+if ($sub > 0) {
+    $where[] = 'l.subtype_id = ?';
+    $types  .= 'i';
+    $args[]   = $sub;
+}
+if ($brand > 0) {
+    $where[] = 'l.brand_id = ?';
+    $types  .= 'i';
+    $args[]   = $brand;
+}
+
 $where_sql = implode(' AND ', $where);
 
 $order_sql = match ($sort) {
@@ -57,6 +98,8 @@ $from = "FROM listings l
          LEFT JOIN users u         ON u.id = l.seller_id
          LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id AND sp.approval = 'approved'
          LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1
+         LEFT JOIN listing_subtypes st ON st.id = l.subtype_id
+         LEFT JOIN listing_brands br   ON br.id = l.brand_id
          WHERE " . $where_sql;
 
 // Total data (untuk pagination)
@@ -78,6 +121,7 @@ $items = [];
 if ($total > 0) {
     $sql = "SELECT l.id, l.title, l.price, l.type, l.status, l.moderation,
                    c.name AS category_name,
+                   st.name AS subtype_name, br.name AS brand_name,
                    COALESCE(sp.store_name, u.username) AS store_name,
                    img.image_url AS image
             " . $from . " ORDER BY " . $order_sql . " LIMIT ? OFFSET ?";
@@ -97,6 +141,20 @@ if ($total > 0) {
 $categories = [];
 try { $categories = db_all($db, 'SELECT name, slug FROM categories ORDER BY id'); }
 catch (Throwable $e) { $categories = []; }
+
+// ── Opsi filter subtipe & merek (muncul saat kategori dipilih) ──
+$subtypes_opts = [];
+$brands_opts   = [];
+if ($cat_id > 0) {
+    try {
+        $subtypes_opts = db_all($db, 'SELECT id, name FROM listing_subtypes WHERE category_id = ? ORDER BY name', 'i', $cat_id);
+        $brands_opts = $sub > 0
+            ? db_all($db, 'SELECT b.id, b.name FROM listing_brands b WHERE b.subtype_id = ? ORDER BY b.name', 'i', $sub)
+            : db_all($db, 'SELECT b.id, b.name FROM listing_brands b
+                           JOIN listing_subtypes s ON s.id = b.subtype_id
+                           WHERE s.category_id = ? ORDER BY b.name', 'i', $cat_id);
+    } catch (Throwable $e) { $subtypes_opts = []; $brands_opts = []; }
+}
 
 // Helper URL (pertahankan semua param kecuali page)
 function listings_url(array $override): string {
@@ -123,6 +181,8 @@ include 'includes/header.php';
                 <?php if ($type): ?><input type="hidden" name="type" value="<?= e($type) ?>"><?php endif; ?>
                 <?php if ($prov): ?><input type="hidden" name="prov" value="<?= e($prov) ?>"><?php endif; ?>
                 <?php if ($kab): ?><input type="hidden" name="kab" value="<?= e($kab) ?>"><?php endif; ?>
+                <?php if ($sub): ?><input type="hidden" name="sub" value="<?= $sub ?>"><?php endif; ?>
+                <?php if ($brand): ?><input type="hidden" name="brand" value="<?= $brand ?>"><?php endif; ?>
                 <button class="btn btn-primary" type="submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
@@ -133,10 +193,10 @@ include 'includes/header.php';
 
             <!-- Chips kategori -->
             <div class="chips mt-2" style="justify-content:flex-start;">
-                <a class="chip <?= $cat === '' ? 'active' : '' ?>" href="<?= e(listings_url(['cat' => '', 'page' => ''])) ?>">Semua</a>
+                <a class="chip <?= $cat === '' ? 'active' : '' ?>" href="<?= e(listings_url(['cat' => '', 'page' => '', 'sub' => '', 'brand' => ''])) ?>">Semua</a>
                 <?php foreach ($categories as $c): ?>
                     <a class="chip <?= $cat === $c['slug'] ? 'active' : '' ?>"
-                       href="<?= e(listings_url(['cat' => $c['slug'], 'page' => ''])) ?>"><?= e($c['name']) ?></a>
+                       href="<?= e(listings_url(['cat' => $c['slug'], 'page' => '', 'sub' => '', 'brand' => ''])) ?>"><?= e($c['name']) ?></a>
                 <?php endforeach; ?>
             </div>
 
@@ -152,10 +212,30 @@ include 'includes/header.php';
                 <div id="katalogLocError" style="width:100%;"></div>
                 <form method="get" action="listings.php" style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
                     <?php foreach ($_GET as $k => $v): ?>
-                        <?php if (!in_array($k, ['sort', 'page', 'prov', 'kab'], true)): ?>
+                        <?php if (!in_array($k, ['sort', 'page', 'prov', 'kab', 'sub', 'brand'], true)): ?>
                             <input type="hidden" name="<?= e($k) ?>" value="<?= e((string)$v) ?>">
                         <?php endif; ?>
                     <?php endforeach; ?>
+                    <?php if ($subtypes_opts): ?>
+                        <select name="sub" class="input"
+                                style="min-height:36px;padding:6px 10px;font-size:13px;width:auto;max-width:180px;"
+                                onchange="var b=this.form.elements.brand; if(b){b.value='';} this.form.submit()">
+                            <option value="">Semua Tipe Produk</option>
+                            <?php foreach ($subtypes_opts as $so): ?>
+                                <option value="<?= (int)$so['id'] ?>" <?= $sub === (int)$so['id'] ? 'selected' : '' ?>><?= e($so['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
+                    <?php if ($brands_opts): ?>
+                        <select name="brand" class="input"
+                                style="min-height:36px;padding:6px 10px;font-size:13px;width:auto;max-width:180px;"
+                                onchange="this.form.submit()">
+                            <option value="">Semua Merek</option>
+                            <?php foreach ($brands_opts as $bo): ?>
+                                <option value="<?= (int)$bo['id'] ?>" <?= $brand === (int)$bo['id'] ? 'selected' : '' ?>><?= e($bo['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
                     <div data-wilayah="katalogLocError" data-wilayah-submit="change"
                          data-wilayah-ids="f_province,f_regency" style="display:flex;gap:8px;flex-wrap:wrap;">
                         <select id="f_province" name="prov" class="input"

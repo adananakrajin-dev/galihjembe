@@ -31,6 +31,20 @@ $categories = [];
 try { $categories = db_all($db, 'SELECT id, name, type FROM categories ORDER BY id'); }
 catch (Throwable $e) {}
 
+// ── Atribut produk: subtipe per kategori & merek per subtipe ──
+$subtypes_by_cat = []; // category_id => [['id' => .., 'name' => ..], ...]
+$brands_by_sub   = []; // subtype_id  => [['id' => .., 'name' => ..], ...]
+try {
+    foreach (db_all($db, 'SELECT id, category_id, name FROM listing_subtypes ORDER BY category_id, name') as $r) {
+        $subtypes_by_cat[(int)$r['category_id']][] = ['id' => (int)$r['id'], 'name' => $r['name']];
+    }
+} catch (Throwable $e) {}
+try {
+    foreach (db_all($db, 'SELECT id, subtype_id, name FROM listing_brands ORDER BY subtype_id, name') as $r) {
+        $brands_by_sub[(int)$r['subtype_id']][] = ['id' => (int)$r['id'], 'name' => $r['name']];
+    }
+} catch (Throwable $e) {}
+
 // ── Aksi: hapus gambar ──
 if (isset($_POST['hapus_gambar'])) {
     csrf_check();
@@ -67,6 +81,8 @@ if (isset($_POST['simpan'])) {
                  ? $_POST['condition'] : null;
     $website     = trim($_POST['website'] ?? '');
     $stack       = trim($_POST['stack'] ?? '');
+    $subtype_id  = (int)($_POST['subtype_id'] ?? 0);
+    $brand_id    = (int)($_POST['brand_id'] ?? 0);
 
     // ── Lokasi cascade (provinsi → kabupaten → kecamatan) + RT/RW ──
     $province = trim($_POST['province'] ?? '');
@@ -98,9 +114,26 @@ if (isset($_POST['simpan'])) {
         $error = 'RT/RW hanya boleh angka (maksimal 3 digit).';
     } elseif ($cat_id > 0 && !db_one($db, 'SELECT id FROM categories WHERE id = ?', 'i', $cat_id)) {
         $error = 'Kategori tidak valid.';
+    } elseif ($type === 'service') {
+        // Jasa tidak punya tipe/merek — paksa kosong
+        $subtype_id = 0;
+        $brand_id   = 0;
+    } elseif ($subtype_id > 0
+              && !(isset($subtypes_by_cat[$cat_id])
+                   && in_array($subtype_id, array_column($subtypes_by_cat[$cat_id], 'id'), true))) {
+        $error = 'Tipe produk tidak sesuai dengan kategori yang dipilih.';
+    } elseif ($subtype_id === 0 && !empty($subtypes_by_cat[$cat_id])) {
+        $error = 'Pilih tipe produk untuk kategori ini.';
+    } elseif ($brand_id > 0
+              && !(isset($brands_by_sub[$subtype_id])
+                   && in_array($brand_id, array_column($brands_by_sub[$subtype_id], 'id'), true))) {
+        $error = 'Merek tidak sesuai dengan tipe produk yang dipilih.';
     }
     // FK: kategori kosong harus NULL, bukan 0
     $cat_bind = $cat_id > 0 ? $cat_id : null;
+    // FK: atribut kosong (jasa / kategori tanpa pilihan) harus NULL, bukan 0
+    $subtype_bind = $subtype_id > 0 ? $subtype_id : null;
+    $brand_bind   = $brand_id > 0 ? $brand_id : null;
 
     // ── Upload foto baru (maks 3 per simpan, total maks 5) ──
     $new_files = [];
@@ -161,13 +194,15 @@ if (isset($_POST['simpan'])) {
             $moderation = $re_moderate ? 'pending' : $old['moderation'];
             $stmt = $db->prepare(
                 'UPDATE listings SET type=?, title=?, description=?, price=?, category_id=?,
+                        subtype_id=?, brand_id=?,
                         `condition`=?, location=?, website=?, stack=?, moderation=?,
                         province=?, regency=?, district=?, rt=?, rw=?
                  WHERE id=? AND seller_id=?'
             );
             $stmt->bind_param(
-                'sssd' . 'i' . str_repeat('s', 10) . 'ii',
+                'sssd' . 'iii' . str_repeat('s', 10) . 'ii',
                 $type, $title, $description, $price, $cat_bind,
+                $subtype_bind, $brand_bind,
                 $condition, $location, $website, $stack, $moderation,
                 $province, $regency, $district, $rt, $rw, $id, $seller_id
             );
@@ -177,14 +212,15 @@ if (isset($_POST['simpan'])) {
             if ($re_moderate) { $moderation_note = ' Listing dikirim ulang ke moderasi admin.'; }
         } else {
             $stmt = $db->prepare(
-                'INSERT INTO listings (seller_id, category_id, type, title, description, price,
+                'INSERT INTO listings (seller_id, category_id, subtype_id, brand_id, type, title, description, price,
                                        `condition`, location, website, stack, moderation,
                                        province, regency, district, rt, rw)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "pending", ?, ?, ?, ?, ?)'
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "pending", ?, ?, ?, ?, ?)'
             );
             $stmt->bind_param(
-                'ii' . 'sss' . 'd' . str_repeat('s', 9),
-                $seller_id, $cat_bind, $type, $title, $description, $price,
+                'iiii' . 'sss' . 'd' . str_repeat('s', 9),
+                $seller_id, $cat_bind, $subtype_bind, $brand_bind,
+                $type, $title, $description, $price,
                 $condition, $location, $website, $stack,
                 $province, $regency, $district, $rt, $rw
             );
@@ -310,6 +346,21 @@ include 'includes/header.php';
                                         <?= e($c['name']) ?>
                                     </option>
                                 <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="field mb-2" id="subtypeField" style="display:none;">
+                            <label for="subtype_id">Tipe Produk</label>
+                            <select id="subtype_id" name="subtype_id" data-selected="<?= e((string)$v('subtype_id')) ?>">
+                                <option value="">— Pilih tipe —</option>
+                            </select>
+                            <div class="hint">Pilih sesuai katalog — detail spesifik tulis di deskripsi.</div>
+                        </div>
+
+                        <div class="field mb-2" id="brandField" style="display:none;">
+                            <label for="brand_id">Merek <span class="faint">(opsional)</span></label>
+                            <select id="brand_id" name="brand_id" data-selected="<?= e((string)$v('brand_id')) ?>">
+                                <option value="">— Tanpa merek —</option>
                             </select>
                         </div>
 
@@ -504,8 +555,45 @@ include 'includes/header.php';
         var hint = document.getElementById('locHintText');
         if (hint) { hint.textContent = isProduct ? '(wajib untuk produk)' : '(opsional untuk jasa)'; }
     }
-    radios.forEach(function (r) { r.addEventListener('change', sync); });
+    // ── Kaskade kategori → tipe produk → merek (produk saja) ──
+    var SUB_DATA   = <?= json_encode($subtypes_by_cat) ?>;
+    var BRAND_DATA = <?= json_encode($brands_by_sub) ?>;
+    var subSel   = document.getElementById('subtype_id');
+    var brandSel = document.getElementById('brand_id');
+
+    function fillSel(sel, items, placeholder, keep) {
+        var html = '<option value="">' + placeholder + '</option>';
+        (items || []).forEach(function (it) {
+            var on = String(it.id) === String(keep) ? ' selected' : '';
+            html += '<option value="' + it.id + '"' + on + '>' + String(it.name).replace(/</g, '&lt;') + '</option>';
+        });
+        sel.innerHTML = html;
+    }
+
+    function renderSubtypes(keep) {
+        var t = (document.querySelector('input[name="type"]:checked') || {}).value || 'product';
+        var catId = document.getElementById('category_id').value;
+        var subs = t === 'product' ? (SUB_DATA[catId] || []) : [];
+        fillSel(subSel, subs, subs.length ? '— Pilih tipe —' : '— Tanpa tipe —', keep);
+        document.getElementById('subtypeField').style.display = subs.length ? '' : 'none';
+    }
+
+    function renderBrands(keep) {
+        var brands = BRAND_DATA[subSel.value] || [];
+        fillSel(brandSel, brands, '— Tanpa merek —', keep);
+        document.getElementById('brandField').style.display = brands.length ? '' : 'none';
+    }
+
+    document.getElementById('category_id').addEventListener('change', function () {
+        renderSubtypes(''); renderBrands('');
+    });
+    subSel.addEventListener('change', function () { renderBrands(''); });
+
+    radios.forEach(function (r) { r.addEventListener('change', function () { sync(); renderSubtypes(''); renderBrands(''); }); });
     sync();
+    // Prefill (mode edit / input lama saat error)
+    renderSubtypes(subSel.getAttribute('data-selected') || '');
+    renderBrands(brandSel.getAttribute('data-selected') || '');
 })();
 </script>
 

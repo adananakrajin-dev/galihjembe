@@ -11,7 +11,8 @@ unggah bukti → diverifikasi admin → seller memproses → selesai → review.
 
 **Umum**
 - Register (role `buyer`) → login → logout; password di-hash `password_hash()`
-- Katalog dengan pencarian, filter kategori/tipe/harga/**lokasi (provinsi → kabupaten)**, paginasi
+- Katalog dengan pencarian, filter kategori/tipe/harga/**lokasi (provinsi → kabupaten)**,
+  **filter tipe produk & merek** (muncul saat kategori dipilih), paginasi
 - Detail listing: galeri foto, paket harga (jasa), favorit, laporan, tombol WhatsApp
 - Ulasan tampil di detail listing + **balasan penjual**; pengguna bisa **melaporkan ulasan** (anti-dobel)
 - Profil (edit data + ganti password), daftar favorit, riwayat pesanan + review bintang (**ubah/hapus ≤7 hari** setelah dikirim)
@@ -23,9 +24,11 @@ unggah bukti → diverifikasi admin → seller memproses → selesai → review.
 
 **Multi-Seller**
 - `become-seller.php`: buyer mengajukan toko → **disetujui/ditolak admin** (role sinkron otomatis tanpa re-login)
-- CRUD listing dengan upload foto (validasi MIME, maks 2 MB, nama acak)
+- CRUD listing dengan upload foto (validasi MIME, maks 2 MB, nama acak); **judul maks 60 karakter**
 - Form listing: cascade **provinsi → kabupaten → kecamatan + RT/RW**
   (wajib untuk produk, opsional untuk jasa; RT/RW disimpan tapi tidak dipublikasikan)
+- Produk: **tipe & merek terstruktur per kategori** (kaskade kategori → tipe → merek, merek opsional;
+  spesifik detail tetap di deskripsi) — tampil sebagai chip di kartu katalog & bisa difilter
 - Semua listing baru masuk **moderasi** (`pending` → admin `approve/reject`)
 - `my-listings.php`, `seller-orders.php` (pesanan masuk + quote brief): proses → selesai
 
@@ -66,7 +69,7 @@ bisnis/
 ├── assets/data/wilayah.json       # Dataset wilayah ID — sumber emsifa/api-wilayah-indonesia (MIT)
 ├── assets/img/                    # Aset gambar (logo, QRIS, ilustrasi halaman statis)
 ├── database/
-│   ├── schema.sql                 # Skema 12 tabel + seed kategori
+│   ├── schema.sql                 # Skema 14 tabel + seed kategori
 │   └── migrate.php                # Migrasi idempotent (CLI / localhost)
 ├── config.local.php               # ⚠️ Kredensial DB — DI-IGNORE git
 ├── database.php                   # ⚠️ Loader koneksi — DI-IGNORE git
@@ -109,7 +112,7 @@ bisnis/
    php database/migrate.php
    ```
 
-   Migrasi menyiapkan 12 tabel, kategori seed, dan akun admin default.
+   Migrasi menyiapkan 14 tabel, kategori seed, dan akun admin default.
 6. Buka `http://localhost/bisnis/`.
 
 > Tanpa `config.local.php`, `database.php` memakai fallback default Laragon
@@ -160,3 +163,5 @@ bisnis/
 | 7 | Panel admin lengkap | ✅ |
 | 8 | Hardening + README | ✅ |
 | 9 | Payment gateway, ekspedisi, chat | ⏳ (di luar scope awal) |
+| 10 | Kartu katalog simetris + judul listing maks 60 karakter | ✅ |
+| 11 | Atribut produk terstruktur (tipe + merek) & filter katalog | ✅ |

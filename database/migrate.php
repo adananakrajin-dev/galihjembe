@@ -19,6 +19,8 @@
  *      (seller_profiles: home_address — hanya tampil untuk admin)
  *   2e. Penataan aset: gambar QRIS pindah ke assets/img/
  *      (settings payment_qris diperbarui bila masih path lama)
+ *   2f. Atribut terstruktur listing: subtipe kategori & merek
+ *      (listings: subtype_id, brand_id + seed subtipe/merek)
  *   3. Membuat akun admin default bila belum ada (admin / admin123)
  */
 
@@ -247,6 +249,121 @@ try {
     }
 } catch (Throwable $e) {
     echo "settings: gagal memperbarui payment_qris — {$e->getMessage()}\n";
+    $fail++;
+}
+
+// ── 2f. Atribut terstruktur listing: subtipe kategori & merek ──
+$attr_wanted = [
+    'subtype_id' => "ADD COLUMN `subtype_id` INT NULL AFTER `category_id`",
+    'brand_id'   => "ADD COLUMN `brand_id` INT NULL AFTER `subtype_id`",
+];
+
+try {
+    $res = $db->query("SHOW COLUMNS FROM listings");
+    $existing = [];
+    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
+
+    foreach ($attr_wanted as $col => $ddl) {
+        if (isset($existing[$col])) { continue; }
+        try {
+            $db->query("ALTER TABLE listings " . $ddl);
+            $added++;
+            echo "listings: kolom `{$col}` ditambahkan\n";
+        } catch (Throwable $e) {
+            echo "listings: gagal menambah kolom `{$col}` — {$e->getMessage()}\n";
+            $fail++;
+        }
+    }
+} catch (Throwable $e) {
+    echo "Cek tabel listings (atribut) gagal: {$e->getMessage()}\n";
+    $fail++;
+}
+
+// Indeks & FK atribut (sudah ada → biarkan)
+foreach ([
+    'ALTER TABLE listings ADD KEY idx_listing_subtype (subtype_id)',
+    'ALTER TABLE listings ADD KEY idx_listing_brand (brand_id)',
+    'ALTER TABLE listings ADD CONSTRAINT fk_listing_subtype FOREIGN KEY (subtype_id) REFERENCES listing_subtypes(id) ON DELETE SET NULL',
+    'ALTER TABLE listings ADD CONSTRAINT fk_listing_brand FOREIGN KEY (brand_id) REFERENCES listing_brands(id) ON DELETE SET NULL',
+] as $attr_ddl) {
+    try { $db->query($attr_ddl); } catch (Throwable $e) { /* sudah ada — biarkan */ }
+}
+
+// Seed subtipe & merek per kategori (INSERT IGNORE — aman diulang)
+$subtype_seed = [
+    'kendaraan'  => ['Sepeda', 'Motor', 'Mobil', 'Bajaj', 'Pesawat', 'Kapal'],
+    'elektronik' => ['Handphone', 'Laptop', 'Kamera', 'Televisi', 'Audio'],
+    'buku'       => ['Novel', 'Komik', 'Buku Pelajaran', 'Majalah'],
+    'furnitur'   => ['Meja', 'Kursi', 'Lemari', 'Kasur'],
+];
+$brand_seed = [
+    'kendaraan|Sepeda'     => ['Polygon', 'United', 'Wim Cycle', 'Federal'],
+    'kendaraan|Motor'      => ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki'],
+    'kendaraan|Mobil'      => ['Toyota', 'Daihatsu', 'Mitsubishi', 'Honda', 'Suzuki', 'Hyundai'],
+    'elektronik|Handphone' => ['Samsung', 'Apple', 'Xiaomi', 'Oppo', 'Vivo'],
+    'elektronik|Laptop'    => ['Asus', 'Acer', 'Lenovo', 'Apple', 'HP'],
+    'elektronik|Kamera'    => ['Canon', 'Nikon', 'Sony', 'Fujifilm'],
+    'elektronik|Televisi'  => ['Samsung', 'LG', 'Sony', 'TCL'],
+    'elektronik|Audio'     => ['Sony', 'JBL', 'Sennheiser'],
+];
+
+$attr_slug = function (string $s): string {
+    $s = strtolower(trim($s));
+    $s = str_replace([' ', '/'], ['-', '-'], $s);
+    return preg_replace('/[^a-z0-9\-]/', '', $s);
+};
+
+$seeded_sub = 0; $seeded_brand = 0;
+try {
+    foreach ($subtype_seed as $cat_slug => $names) {
+        $stmt = $db->prepare('SELECT id FROM categories WHERE slug = ?');
+        $stmt->bind_param('s', $cat_slug);
+        $stmt->execute();
+        $cat = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$cat) { continue; }
+
+        foreach ($names as $name) {
+            $slug = $attr_slug($name);
+            $stmt = $db->prepare('INSERT IGNORE INTO listing_subtypes (category_id, name, slug) VALUES (?, ?, ?)');
+            $stmt->bind_param('iss', $cat['id'], $name, $slug);
+            $stmt->execute();
+            if ($stmt->affected_rows > 0) { $seeded_sub++; }
+            $stmt->close();
+        }
+    }
+
+    foreach ($brand_seed as $key => $names) {
+        list($cat_slug, $sub_name) = explode('|', $key, 2);
+        $stmt = $db->prepare(
+            'SELECT s.id FROM listing_subtypes s
+             JOIN categories c ON c.id = s.category_id
+             WHERE c.slug = ? AND s.name = ?'
+        );
+        $stmt->bind_param('ss', $cat_slug, $sub_name);
+        $stmt->execute();
+        $sub = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$sub) { continue; }
+
+        foreach ($names as $name) {
+            $slug = $attr_slug($name);
+            $stmt = $db->prepare('INSERT IGNORE INTO listing_brands (subtype_id, name, slug) VALUES (?, ?, ?)');
+            $stmt->bind_param('iss', $sub['id'], $name, $slug);
+            $stmt->execute();
+            if ($stmt->affected_rows > 0) { $seeded_brand++; }
+            $stmt->close();
+        }
+    }
+
+    if ($seeded_sub || $seeded_brand) {
+        $added += $seeded_sub + $seeded_brand;
+        echo "atribut: +{$seeded_sub} subtipe, +{$seeded_brand} merek (seed)\n";
+    } else {
+        echo "atribut: subtipe & merek sudah lengkap.\n";
+    }
+} catch (Throwable $e) {
+    echo "atribut: gagal seed subtipe/merek — {$e->getMessage()}\n";
     $fail++;
 }
 

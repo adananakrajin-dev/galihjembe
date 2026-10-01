@@ -302,7 +302,7 @@ function wilayah_check(string $province, string $regency, string $district): boo
     return false;
 }
 
-/** Render satu kartu listing. Kolom yang dibutuhkan: id, title, price, type, status, moderation, image (opsional), category_name (opsional), store_name (opsional). */
+/** Render satu kartu listing. Kolom yang dibutuhkan: id, title, price, type, status, moderation, image (opsional), category_name (opsional), store_name (opsional), subtype_name (opsional), brand_name (opsional). */
 function listing_card(array $l, string $base = ''): string {
     $img = !empty($l['image'])
         ? '<img src="' . e($base . 'uploads/' . $l['image']) . '" alt="' . e($l['title']) . '" loading="lazy">'
@@ -312,7 +312,14 @@ function listing_card(array $l, string $base = ''): string {
     $meta[] = '<span class="badge ' . ($l['type'] === 'service' ? 'badge-info' : 'badge-muted') . '">'
             . ($l['type'] === 'service' ? 'Jasa' : 'Produk') . '</span>';
     if (!empty($l['category_name'])) {
-        $meta[] = '<span>' . e($l['category_name']) . '</span>';
+        $cat_label = $l['category_name'];
+        if (!empty($l['subtype_name'])) {
+            $cat_label .= ' · ' . $l['subtype_name'];
+        }
+        $meta[] = '<span>' . e($cat_label) . '</span>';
+    }
+    if (!empty($l['brand_name'])) {
+        $meta[] = '<span class="card-brand">' . e($l['brand_name']) . '</span>';
     }
     if (!empty($l['store_name'])) {
         $meta[] = '<span>' . e($l['store_name']) . '</span>';

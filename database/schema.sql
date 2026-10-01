@@ -54,11 +54,37 @@ CREATE TABLE IF NOT EXISTS categories (
     UNIQUE KEY uq_cat_slug (slug)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ── Subtipe listing per kategori (mis. Kendaraan: sepeda, motor, mobil) ──
+CREATE TABLE IF NOT EXISTS listing_subtypes (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    category_id INT NOT NULL,
+    name        VARCHAR(60) NOT NULL,
+    slug        VARCHAR(60) NOT NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_subtype_cat (category_id, slug),
+    KEY idx_subtype_cat (category_id),
+    CONSTRAINT fk_subtype_cat FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── Merek per subtipe (mis. Motor: Honda, Yamaha, Suzuki, Kawasaki) ──
+CREATE TABLE IF NOT EXISTS listing_brands (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    subtype_id INT NOT NULL,
+    name       VARCHAR(60) NOT NULL,
+    slug       VARCHAR(60) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_brand_subtype (subtype_id, slug),
+    KEY idx_brand_subtype (subtype_id),
+    CONSTRAINT fk_brand_subtype FOREIGN KEY (subtype_id) REFERENCES listing_subtypes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ── Listing (jasa ATAU produk — kolom `type`) ────────────────
 CREATE TABLE IF NOT EXISTS listings (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     seller_id   INT NOT NULL,
     category_id INT NULL,
+    subtype_id  INT NULL,                         -- tipe produk dalam kategori (mis. Motor)
+    brand_id    INT NULL,                         -- merek subtipe (mis. Honda), opsional
     type        ENUM('product','service') NOT NULL DEFAULT 'product',
     title       VARCHAR(150) NOT NULL,
     description TEXT NOT NULL,
@@ -78,10 +104,14 @@ CREATE TABLE IF NOT EXISTS listings (
     updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY idx_listing_seller (seller_id),
     KEY idx_listing_cat (category_id),
+    KEY idx_listing_subtype (subtype_id),
+    KEY idx_listing_brand (brand_id),
     KEY idx_listing_browse (moderation, status, type),
     FULLTEXT KEY ft_listing_search (title, description),
     CONSTRAINT fk_listing_seller FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_listing_cat FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+    CONSTRAINT fk_listing_cat FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    CONSTRAINT fk_listing_subtype FOREIGN KEY (subtype_id) REFERENCES listing_subtypes(id) ON DELETE SET NULL,
+    CONSTRAINT fk_listing_brand FOREIGN KEY (brand_id) REFERENCES listing_brands(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ── Paket harga jasa (Basic / Pro / Enterprise) ──────────────
