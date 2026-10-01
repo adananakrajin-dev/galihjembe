@@ -68,19 +68,19 @@ try {
 if ($brief) {
     $title     = $brief['title'];
     $seller_id = (int)$brief['seller_id'];
-    $base      = (float)$brief['quote_price'];
+    $harga     = (float)$brief['quote_price'];
     $subtitle  = 'Penawaran brief custom';
 } else {
     $title     = $listing['title'];
     $seller_id = (int)$listing['seller_id'];
-    $base      = $pkg ? (float)$pkg['price'] : (float)$listing['price'];
+    $harga     = $pkg ? (float)$pkg['price'] : (float)$listing['price'];
     $subtitle  = $pkg
         ? 'Paket ' . $pkg['name'] . ($pkg['duration_days'] ? ' · ' . $pkg['duration_days'] . ' hari' : '')
         : ($listing['type'] === 'service' ? 'Jasa' : 'Produk');
 }
 
-$ppn   = (int)round($base * 0.11);
-$total = $base + $ppn;
+$ppn   = (int)round($harga * 0.11);
+$total = $harga + $ppn;
 $is_product = $brief ? false : ($listing['type'] === 'product');
 
 // ── Proses buat pesanan ──
@@ -198,7 +198,7 @@ include 'includes/header.php';
                             <span class="badge badge-info"><?= e($subtitle) ?></span>
                         </div>
                         <div class="summary-row"><span>Pemesan</span><span style="color:var(--text)"><?= e($_SESSION['username']) ?></span></div>
-                        <div class="summary-row"><span>Harga</span><span><?= rupiah($base) ?></span></div>
+                        <div class="summary-row"><span>Harga</span><span><?= rupiah($harga) ?></span></div>
                         <div class="summary-row"><span>PPN (11%)</span><span><?= rupiah($ppn) ?></span></div>
                         <div class="summary-row"><span>Biaya Layanan</span><span style="color:var(--success)">Gratis</span></div>
                         <div class="summary-row total"><span>Total</span><span style="color:var(--accent-strong)"><?= rupiah($total) ?></span></div>
