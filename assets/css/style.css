@@ -381,9 +381,35 @@ a.card .card-title { min-height: calc(2 * 1.6em); }
     color: var(--faint);
 }
 
-/* Badge + nama toko di-pin ke bawah kartu (sisa ruang jadi margin atas)
-   → baris bawah semua kartu se-baris walau kategori panjang & wrap. */
-a.card .card-meta { margin-top: auto; padding-top: 10px; }
+/* Baris nama toko (avatar + nama) di-pin ke bawah kartu — sisa ruang jadi
+   margin atas, jadi baris toko selalu sejajar di semua kartu se-baris,
+   tidak pernah sejajar dengan badge/jenis/model di baris meta. */
+a.card .card-store { margin-top: auto; padding-top: 10px; }
+
+.card-store {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--faint);
+}
+.card-store-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Avatar bulat (foto profil / toko) — inisial kalau belum ada foto */
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 600;
+    line-height: 1;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* Merek pada kartu listing — ditegaskan tanpa merusak ritme meta */
 .card-brand { font-weight: 600; color: var(--text); }

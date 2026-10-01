@@ -202,7 +202,7 @@ function handle_upload(array $file, string $kind = 'image'): array {
         mkdir(UPLOAD_DIR, 0755, true);
     }
 
-    $name = ($kind === 'proof' ? 'bukti_' : 'listing_') . bin2hex(random_bytes(8)) . '.' . $map[$mime];
+    $name = ($kind === 'proof' ? 'bukti_' : ($kind === 'avatar' ? 'avatar_' : 'listing_')) . bin2hex(random_bytes(8)) . '.' . $map[$mime];
     $dest = UPLOAD_DIR . '/' . $name;
 
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
@@ -218,6 +218,21 @@ function delete_upload(?string $filename): void {
     if (!$filename || strpos($filename, '/') !== false || strpos($filename, '\\') !== false) { return; }
     $path = UPLOAD_DIR . '/' . $filename;
     if (is_file($path)) { @unlink($path); }
+}
+
+/**
+ * Avatar bulat: foto bila ada, inisial bila kosong.
+ * $base prefix path ("" untuk root, "../" untuk halaman admin).
+ */
+function avatar_html(?string $avatar, string $name, int $size = 24, string $base = ''): string {
+    $style = 'width:' . $size . 'px;height:' . $size . 'px;font-size:' . max(9, (int)round($size * 0.4)) . 'px;';
+    if ($avatar) {
+        return '<span class="avatar" style="' . $style . '">'
+             . '<img src="' . e($base . 'uploads/' . $avatar) . '" alt="' . e($name) . '" loading="lazy">'
+             . '</span>';
+    }
+    $initial = strtoupper(mb_substr(trim($name) !== '' ? $name : '?', 0, 1));
+    return '<span class="avatar avatar-empty" style="' . $style . '" aria-hidden="true">' . e($initial) . '</span>';
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -302,7 +317,8 @@ function wilayah_check(string $province, string $regency, string $district): boo
     return false;
 }
 
-/** Render satu kartu listing. Kolom yang dibutuhkan: id, title, price, type, status, moderation, image (opsional), category_name (opsional), store_name (opsional), subtype_name (opsional), brand_name (opsional). */
+/** Render satu kartu listing. Kolom yang dibutuhkan: id, title, price, type, status, moderation, image (opsional), category_name (opsional), store_name (opsional), subtype_name (opsional), brand_name (opsional), seller_avatar (opsional).
+ *  Susunan: judul → harga → baris meta (badge + jenis + kategori·model·merek) → baris toko (avatar + nama, pin bawah). */
 function listing_card(array $l, string $base = ''): string {
     $img = !empty($l['image'])
         ? '<img src="' . e($base . 'uploads/' . $l['image']) . '" alt="' . e($l['title']) . '" loading="lazy">'
@@ -321,8 +337,15 @@ function listing_card(array $l, string $base = ''): string {
     if (!empty($l['brand_name'])) {
         $meta[] = '<span class="card-brand">' . e($l['brand_name']) . '</span>';
     }
-    if (!empty($l['store_name'])) {
-        $meta[] = '<span>' . e($l['store_name']) . '</span>';
+
+    // Baris nama toko (avatar + nama) — selalu di bawah, tidak sejajar dengan badge
+    $store = '';
+    $store_name = trim((string)($l['store_name'] ?? ''));
+    if ($store_name !== '') {
+        $store = '<div class="card-store">'
+               . avatar_html($l['seller_avatar'] ?? null, $store_name, 22, $base)
+               . '<span class="card-store-name">' . e($store_name) . '</span>'
+               . '</div>';
     }
 
     return '<a class="card" href="' . e($base) . 'listing-detail.php?id=' . (int)$l['id'] . '">'
@@ -331,5 +354,6 @@ function listing_card(array $l, string $base = ''): string {
         .   '<div class="card-title">' . e($l['title']) . '</div>'
         .   '<div class="card-price">' . rupiah($l['price']) . '</div>'
         .   '<div class="card-meta">' . status_badge($l) . implode('', $meta) . '</div>'
+        .   $store
         . '</div></a>';
 }

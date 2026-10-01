@@ -81,6 +81,44 @@ if (isset($_POST['ganti_password'])) {
     }
 }
 
+// ── Aksi: ganti foto profil ──
+if (isset($_POST['simpan_avatar'])) {
+    csrf_check();
+
+    $up = handle_upload($_FILES['avatar'] ?? ['error' => UPLOAD_ERR_NO_FILE], 'avatar');
+    if (!$up['ok']) {
+        $error = $up['error'];
+    } else {
+        $stmt = $db->prepare('UPDATE users SET avatar = ? WHERE id = ?');
+        $stmt->bind_param('si', $up['file'], $user_id);
+        if ($stmt->execute()) {
+            $stmt->close();
+            delete_upload($user['avatar'] ?? null); // buang foto lama setelah ganti
+            set_flash('Foto profil diperbarui.', 'success');
+            header('Location: profile.php');
+            exit;
+        }
+        $stmt->close();
+        delete_upload($up['file']); // rollback file baru bila UPDATE gagal
+        $error = 'Gagal menyimpan foto profil.';
+    }
+}
+
+// ── Aksi: hapus foto profil ──
+if (isset($_POST['hapus_avatar'])) {
+    csrf_check();
+    if (!empty($user['avatar'])) {
+        $stmt = $db->prepare('UPDATE users SET avatar = NULL WHERE id = ?');
+        $stmt->bind_param('i', $user_id);
+        $stmt->execute();
+        $stmt->close();
+        delete_upload($user['avatar']);
+        set_flash('Foto profil dihapus.', 'success');
+    }
+    header('Location: profile.php');
+    exit;
+}
+
 $initial  = strtoupper(substr($user['name'] ?: $user['username'], 0, 1));
 $role_lbl = ['admin' => ['Admin', 'badge-info'], 'seller' => ['Penjual', 'badge-available']][current_role()] ?? ['Pembeli', 'badge-muted'];
 
@@ -112,9 +150,7 @@ include 'includes/header.php';
                 <div>
                     <div>
                         <div class="feature" style="align-items:center;">
-                            <span class="mi-icon" style="width:64px;height:64px;border-radius:50%;font-size:24px;font-weight:700;">
-                                <?= e($initial) ?>
-                            </span>
+                            <?= avatar_html($user['avatar'] ?? null, $user['name'] ?: $user['username'], 64) ?>
                             <div>
                                 <div class="mi-title" style="font-size:18px;"><?= e($user['name'] ?: $user['username']) ?></div>
                                 <div class="mi-desc">@<?= e($user['username']) ?> · sejak <?= e(date('M Y', strtotime($user['created_at'] ?? 'now'))) ?></div>
@@ -177,6 +213,27 @@ include 'includes/header.php';
 
                 <!-- Form data diri + password -->
                 <div>
+                    <div>
+                        <h3 class="mb-2">Foto Profil</h3>
+                        <form action="profile.php" method="POST" enctype="multipart/form-data" class="form">
+                            <?= csrf_field() ?>
+                            <div class="field">
+                                <label for="avatar">Unggah Foto (JPG/PNG/WebP, maks 2 MB)</label>
+                                <input id="avatar" type="file" name="avatar" accept="image/jpeg,image/png,image/webp">
+                                <span class="hint">Tampil di navbar, profil, dan kartu toko. Kalau kosong memakai inisial.</span>
+                            </div>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                <button type="submit" name="simpan_avatar" class="btn btn-primary btn-sm">Unggah Foto</button>
+                                <?php if (!empty($user['avatar'])): ?>
+                                    <button type="submit" name="hapus_avatar" class="btn btn-soft btn-sm"
+                                            data-confirm="Hapus foto profil kamu?">Hapus Foto</button>
+                                <?php endif; ?>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="divider"></div>
+
                     <div>
                         <h3 class="mb-2">Data Diri</h3>
                         <form action="profile.php" method="POST" class="form">

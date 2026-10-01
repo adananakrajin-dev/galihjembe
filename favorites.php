@@ -25,6 +25,7 @@ try {
         'SELECT f.id AS fav_id, l.id, l.title, l.price, l.type, l.status, l.moderation,
                 c.name AS category_name, st.name AS subtype_name, br.name AS brand_name,
                 COALESCE(sp.store_name, u.username) AS store_name,
+                u.avatar AS seller_avatar,
                 img.image_url AS image
          FROM favorites f
          JOIN listings l ON l.id = f.listing_id

@@ -14,7 +14,8 @@ try {
         $db,
         'SELECT l.id, l.title, l.price, l.type, l.status, l.moderation, c.name AS category_name,
                 st.name AS subtype_name, br.name AS brand_name,
-                COALESCE(sp.store_name, u.username) AS store_name, img.image_url AS image
+                COALESCE(sp.store_name, u.username) AS store_name, u.avatar AS seller_avatar,
+                img.image_url AS image
          FROM listings l
          LEFT JOIN categories c ON c.id = l.category_id
          LEFT JOIN listing_subtypes st ON st.id = l.subtype_id
@@ -29,7 +30,8 @@ try {
         $db,
         'SELECT l.id, l.title, l.price, l.type, l.status, l.moderation, c.name AS category_name,
                 st.name AS subtype_name, br.name AS brand_name,
-                COALESCE(sp.store_name, u.username) AS store_name, img.image_url AS image
+                COALESCE(sp.store_name, u.username) AS store_name, u.avatar AS seller_avatar,
+                img.image_url AS image
          FROM listings l
          LEFT JOIN categories c ON c.id = l.category_id
          LEFT JOIN listing_subtypes st ON st.id = l.subtype_id
