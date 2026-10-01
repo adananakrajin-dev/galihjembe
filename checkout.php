@@ -396,7 +396,7 @@ include 'includes/header.php';
             var m = METHOD;
             if (!ORDER_MODE) {
                 var checked = document.querySelector('input[name="method"]:checked');
-                if (!checked) { alert('Pilih metode pembayaran dulu ya!'); return; }
+                if (!checked) { toast('Pilih metode pembayaran dulu ya!', 'warn'); return; }
                 m = checked.value;
             }
             if (m) { showMethod(m); }
@@ -414,7 +414,7 @@ include 'includes/header.php';
         if (!btn) return;
         var text = btn.getAttribute('data-copy').replace(/-/g, '');
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(function () { alert('Nomor rekening berhasil disalin!'); });
+            navigator.clipboard.writeText(text).then(function () { toast('Nomor rekening berhasil disalin!'); });
         }
     });
 })();

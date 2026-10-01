@@ -415,6 +415,79 @@ a.card .card-store { margin-top: auto; padding-top: 10px; }
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* ══ Konfirmasi in-app — pengganti dialog browser "localhost says" ══ */
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+.confirm-overlay.open { opacity: 1; visibility: visible; }
+.confirm-panel {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+    transform: translateY(10px) scale(0.98);
+    transition: transform 0.18s ease;
+}
+.confirm-overlay.open .confirm-panel { transform: none; }
+.confirm-msg { font-size: 15px; line-height: 1.55; color: var(--text); margin-bottom: 18px; }
+.confirm-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ══ Toast notifikasi in-app — pengganti alert kecil ══ */
+.toast {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 310;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: min(360px, calc(100vw - 40px));
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+.toast.open { opacity: 1; transform: none; pointer-events: auto; }
+.toast-warn    { border-left: 3px solid var(--warning); }
+.toast-success { border-left: 3px solid var(--success); }
+.toast-msg { line-height: 1.45; }
+.toast-close {
+    margin-left: auto;
+    padding: 2px 4px;
+    background: none;
+    border: 0;
+    color: var(--faint);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+.toast-close:hover { color: var(--text); }
+
+/* Hormati preferensi kurangi animasi */
+@media (prefers-reduced-motion: reduce) {
+    .confirm-overlay, .confirm-panel, .toast { transition: none; }
+}
+
 /* Merek pada kartu listing — ditegaskan tanpa merusak ritme meta */
 .card-brand { font-weight: 600; color: var(--text); }
 
