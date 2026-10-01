@@ -334,7 +334,7 @@ p  { color: var(--muted); }
     transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-a.card { text-decoration: none; display: block; }
+a.card { text-decoration: none; display: flex; flex-direction: column; }
 a.card:hover {
     border-color: var(--border-strong);
     transform: translateY(-3px);
@@ -353,7 +353,7 @@ a.card:hover {
 
 .card-media img { width: 100%; height: 100%; object-fit: cover; }
 
-.card-body { padding: 14px 16px 16px; }
+.card-body { flex: 1; display: flex; flex-direction: column; padding: 14px 16px 16px; }
 
 .card-title {
     font-size: 15px;
@@ -366,6 +366,10 @@ a.card:hover {
     overflow: hidden;
 }
 
+/* Ruang 2 baris judul selalu dipesan (walau 1 baris) → harga & meta
+   sejajar di semua kartu se-baris. em → ikut ukuran font di breakpoint. */
+a.card .card-title { min-height: calc(2 * 1.6em); }
+
 .card-price { font-size: 16px; font-weight: 700; color: var(--accent-strong); }
 
 .card-meta {
@@ -376,6 +380,10 @@ a.card:hover {
     font-size: 12px;
     color: var(--faint);
 }
+
+/* Badge + nama toko di-pin ke bawah kartu (sisa ruang jadi margin atas)
+   → baris bawah semua kartu se-baris walau kategori panjang & wrap. */
+a.card .card-meta { margin-top: auto; padding-top: 10px; }
 
 /* ── Badge status ── */
 .badge {

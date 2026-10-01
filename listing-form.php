@@ -80,8 +80,8 @@ if (isset($_POST['simpan'])) {
         : trim($old['location'] ?? '');
 
     // ── Validasi ──
-    if (strlen($title) < 5 || strlen($title) > 150) {
-        $error = 'Judul harus 5–150 karakter.';
+    if (strlen($title) < 5 || strlen($title) > 60) {
+        $error = 'Judul harus 5–60 karakter.';
     } elseif (strlen($description) < 10) {
         $error = 'Deskripsi minimal 10 karakter.';
     } elseif ($price <= 0) {
@@ -295,9 +295,10 @@ include 'includes/header.php';
 
                         <div class="field mb-2">
                             <label for="title">Judul</label>
-                            <input id="title" type="text" name="title" required minlength="5" maxlength="150"
+                            <input id="title" type="text" name="title" required minlength="5" maxlength="60"
                                    placeholder="<?= $type_val === 'service' ? 'Contoh: Bikin Landing Page Profesional' : 'Contoh: Laptop Bekas Ringan' ?>"
                                    value="<?= e($v('title')) ?>">
+                            <div class="hint">Maks 60 karakter — judul singkat biar rapi di katalog. Detail spesifik tulis di deskripsi.</div>
                         </div>
 
                         <div class="field mb-2">
