@@ -48,7 +48,7 @@ try {
         'SELECT sp.*, u.name, u.email, u.username, u.phone,
                 (SELECT COUNT(*) FROM listings l WHERE l.seller_id = u.id) AS listing_count
          FROM seller_profiles sp JOIN users u ON u.id = sp.user_id
-         ORDER BY FIELD(sp.approval, "pending", "approved", "rejected"), sp.updated_at DESC'
+         ORDER BY CASE sp.approval WHEN \'pending\' THEN 0 WHEN \'approved\' THEN 1 WHEN \'rejected\' THEN 2 ELSE 3 END, sp.updated_at DESC'
     );
 } catch (Throwable $e) {}
 ?>

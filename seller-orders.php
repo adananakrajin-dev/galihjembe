@@ -80,7 +80,7 @@ try {
         'SELECT o.*, ub.name AS buyer_name, ub.username AS buyer_username
          FROM orders o JOIN users ub ON ub.id = o.buyer_id
          WHERE o.seller_id = ?
-         ORDER BY FIELD(o.status, "menunggu_bukti", "diverifikasi", "proses", "selesai", "batal"), o.created_at DESC',
+         ORDER BY CASE o.status WHEN \'menunggu_bukti\' THEN 0 WHEN \'diverifikasi\' THEN 1 WHEN \'proses\' THEN 2 WHEN \'selesai\' THEN 3 WHEN \'batal\' THEN 4 ELSE 5 END, o.created_at DESC',
         'i', $seller_id
     );
 } catch (Throwable $e) {}
@@ -94,7 +94,7 @@ try {
          FROM briefs b JOIN users ub ON ub.id = b.buyer_id
          WHERE (b.seller_id = ? OR b.seller_id IS NULL)
            AND b.status <> "accepted"
-         ORDER BY FIELD(b.status, "pending", "quoted"), b.created_at DESC',
+         ORDER BY CASE b.status WHEN \'pending\' THEN 0 WHEN \'quoted\' THEN 1 ELSE 2 END, b.created_at DESC',
         'i', $seller_id
     );
 } catch (Throwable $e) {}

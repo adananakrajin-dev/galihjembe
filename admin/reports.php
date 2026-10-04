@@ -45,7 +45,7 @@ try {
          LEFT JOIN listings l ON l.id = r.listing_id
          LEFT JOIN reviews rv ON rv.id = r.review_id
          LEFT JOIN users ub ON ub.id = rv.buyer_id
-         ORDER BY FIELD(r.status, "pending", "resolved", "rejected"), r.created_at DESC'
+         ORDER BY CASE r.status WHEN \'pending\' THEN 0 WHEN \'resolved\' THEN 1 WHEN \'rejected\' THEN 2 ELSE 3 END, r.created_at DESC'
     );
 } catch (Throwable $e) {}
 ?>

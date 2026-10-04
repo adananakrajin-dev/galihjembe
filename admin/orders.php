@@ -53,7 +53,7 @@ try {
          JOIN users ub ON ub.id = o.buyer_id
          JOIN users us ON us.id = o.seller_id
          LEFT JOIN seller_profiles sp ON sp.user_id = o.seller_id
-         ORDER BY FIELD(o.status, "menunggu_bukti", "diverifikasi", "proses", "selesai", "batal"), o.created_at DESC'
+         ORDER BY CASE o.status WHEN \'menunggu_bukti\' THEN 0 WHEN \'diverifikasi\' THEN 1 WHEN \'proses\' THEN 2 WHEN \'selesai\' THEN 3 WHEN \'batal\' THEN 4 ELSE 5 END, o.created_at DESC'
     );
 } catch (Throwable $e) {}
 ?>

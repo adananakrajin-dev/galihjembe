@@ -59,7 +59,7 @@ try {
                     (SELECT COUNT(*) FROM orders o WHERE o.buyer_id = u.id) AS order_count
              FROM users u
              WHERE u.username LIKE ? OR u.name LIKE ? OR u.email LIKE ?
-             ORDER BY FIELD(u.role, "admin", "seller", "buyer"), u.created_at DESC',
+             ORDER BY CASE u.role WHEN \'admin\' THEN 0 WHEN \'seller\' THEN 1 WHEN \'buyer\' THEN 2 ELSE 3 END, u.created_at DESC',
             'sss', "%$q%", "%$q%", "%$q%"
         );
     } else {
@@ -68,7 +68,7 @@ try {
             'SELECT u.*, (SELECT COUNT(*) FROM listings l WHERE l.seller_id = u.id) AS listing_count,
                     (SELECT COUNT(*) FROM orders o WHERE o.buyer_id = u.id) AS order_count
              FROM users u
-             ORDER BY FIELD(u.role, "admin", "seller", "buyer"), u.created_at DESC'
+             ORDER BY CASE u.role WHEN \'admin\' THEN 0 WHEN \'seller\' THEN 1 WHEN \'buyer\' THEN 2 ELSE 3 END, u.created_at DESC'
         );
     }
 } catch (Throwable $e) {}

@@ -36,7 +36,7 @@ try {
         $items = db_all($db, $sql . ' WHERE l.moderation = ? ORDER BY l.created_at DESC', 's', $filter);
     } else {
         $filter = 'all';
-        $items = db_all($db, $sql . ' ORDER BY FIELD(l.moderation, "pending", "approved", "rejected"), l.created_at DESC');
+        $items = db_all($db, $sql . ' ORDER BY CASE l.moderation WHEN \'pending\' THEN 0 WHEN \'approved\' THEN 1 WHEN \'rejected\' THEN 2 ELSE 3 END, l.created_at DESC');
     }
 } catch (Throwable $e) {
     $items = [];
