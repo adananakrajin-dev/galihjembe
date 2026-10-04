@@ -15,8 +15,10 @@ function section(string $t): void { echo "\n== $t ==\n"; }
 // -- 1. Koneksi ----------------------------------------------------
 require $root . '/database.php';
 section('Koneksi');
-ok('tabel users terbaca',    (int)$db->query('SELECT COUNT(*) FROM users')->fetchColumn()    >= 0);
-ok('tabel listings terbaca', (int)$db->query('SELECT COUNT(*) FROM listings')->fetchColumn() >= 0);
+// CATATAN: build PHP ini case-SENSITIVE untuk lookup method, jadi pakai nama
+// persis seperti yang dideklarasikan (snake_case) dan seperti yang dipakai app.
+ok('tabel users terbaca',    (int)$db->query('SELECT COUNT(*) FROM users')->fetch_column()    >= 0);
+ok('tabel listings terbaca', (int)$db->query('SELECT COUNT(*) FROM listings')->fetch_column() >= 0);
 
 // -- 2. Shim: prepare + bind_param + get_result -------------------
 section('Shim DbStatement');
@@ -80,9 +82,10 @@ foreach ($it as $f) {
     if (substr($p, -4) !== '.php') continue;
     if (strpos($p, '\\tests\\') !== false || strpos($p, '\\.git\\') !== false) continue;
     if (basename($p) === 'migrate.php') continue; // punya wrapper sendiri
+    if (basename($p) === 'Db.php') continue;       // shim itu sendiri hanya menyebut mysqli di komentar
     if (preg_match('/\bmysqli\b/', file_get_contents($p))) $bad[] = basename($p);
 }
 ok('tidak ada "mysqli" di file halaman', count($bad) === 0, '(' . implode(', ', $bad) . ')');
 
-echo "\n=== LULUS: {$GLOBALS['__pass']} | GAGAL: {$GLOBALS['__fail']} ===\n";
-exit($GLOBALS['__fail'] === 0 ? 0 : 1);
+echo "\n=== LULUS: {$GLOBALS['__pass']} | GAGAL: {$GLOBALS['__fails']} ===\n";
+exit($GLOBALS['__fails'] === 0 ? 0 : 1);

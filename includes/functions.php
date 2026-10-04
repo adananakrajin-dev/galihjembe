@@ -75,7 +75,7 @@ function root_url(string $path = ''): string
 function sync_role(): void
 {
     global $db;
-    if (!isset($_SESSION['user_id']) || !($db instanceof mysqli)) { return; }
+    if (!isset($_SESSION['user_id']) || !($db instanceof Db)) { return; }
     try {
         $row = db_one($db, 'SELECT role, status, username FROM users WHERE id = ?', 'i', (int)$_SESSION['user_id']);
         if (!$row) { return; }
@@ -140,7 +140,7 @@ function rupiah($n): string {
 }
 
 /** Query helper: ambil semua baris. */
-function db_all(mysqli $db, string $sql, string $types = '', ...$args): array {
+function db_all(Db $db, string $sql, string $types = '', ...$args): array {
     $stmt = $db->prepare($sql);
     if ($types !== '') { $stmt->bind_param($types, ...$args); }
     $stmt->execute();
@@ -148,7 +148,7 @@ function db_all(mysqli $db, string $sql, string $types = '', ...$args): array {
 }
 
 /** Query helper: ambil satu baris (null bila tidak ada). */
-function db_one(mysqli $db, string $sql, string $types = '', ...$args): ?array {
+function db_one(Db $db, string $sql, string $types = '', ...$args): ?array {
     $stmt = $db->prepare($sql);
     if ($types !== '') { $stmt->bind_param($types, ...$args); }
     $stmt->execute();

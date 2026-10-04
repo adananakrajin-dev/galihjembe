@@ -8,7 +8,7 @@ $role     = current_role();
 $initial  = strtoupper(substr($username, 0, 1));
 
 /** Hitung aman: kembalikan 0 bila tabel belum ada (skema belum di-migrasi). */
-function try_count(mysqli $db, string $sql): int {
+function try_count(Db $db, string $sql): int {
     try {
         $res = $db->query($sql);
         $row = $res ? $res->fetch_row() : null;

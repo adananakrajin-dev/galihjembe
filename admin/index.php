@@ -3,7 +3,7 @@ $page_title  = 'Ringkasan Admin';
 $admin_active = 'index';
 include '_head.php';
 
-function try_count(mysqli $db, string $sql): int
+function try_count(Db $db, string $sql): int
 {
     try {
         $res = $db->query($sql);
