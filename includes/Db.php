@@ -16,7 +16,7 @@
 if (!defined('MYSQLI_ASSOC')) { define('MYSQLI_ASSOC', 1); }
 if (!defined('MYSQLI_NUM'))  { define('MYSQLI_NUM', 2);  }
 
-class DbResult
+class DbResult implements IteratorAggregate
 {
     private array $rows;
     private int $cursor = 0;
@@ -27,6 +27,9 @@ class DbResult
         $this->rows     = $rows;
         $this->num_rows = count($rows);
     }
+
+    /** mysqli_result bisa di-foreach langsung; shim meniru itu. */
+    public function getIterator(): Iterator { return new ArrayIterator($this->rows); }
 
     public function fetch_assoc(): ?array { return $this->rows[$this->cursor++] ?? null; }
 
@@ -128,13 +131,21 @@ class Db
         return new DbStatement($this->pdo, $sql);
     }
 
+    /** mysqli_result bila query mengembalikan baris, bool true bila non-SELECT. */
+    private function returnsRows(string $sql): bool
+    {
+        // information_schema/pg_catalog tidak diawali SELECT/ WITH.
+        return (bool)preg_match('/^\s*(SELECT|WITH|SHOW|PRAGMA|EXPLAIN)\b/i', $sql)
+            || (bool)preg_match('/\b(FROM|JOIN)\s+(information_schema|pg_catalog|pg_)\b/i', $sql);
+    }
+
     /**
      * mysqli::query() mengembalikan mysqli_result untuk SELECT dan bool true untuk
      * UPDATE/INSERT/DELETE - bahkan ketika 0 baris terpengaruh. Shim meniru itu.
      */
     public function query(string $sql)
     {
-        $returnsRows = (bool)preg_match('/^\s*(SELECT|WITH|SHOW|PRAGMA|EXPLAIN)\b/i', $sql);
+        $returnsRows = $this->returnsRows($sql);
         $stmt = $this->pdo->query($sql);
         if ($returnsRows) {
             return new DbResult($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -145,7 +156,7 @@ class Db
     /** Query berparameter untuk Db::query() (dipakai migrate.php). */
     public function queryParams(string $sql, array $params = [])
     {
-        $returnsRows = (bool)preg_match('/^\s*(SELECT|WITH|SHOW|PRAGMA|EXPLAIN)\b/i', $sql);
+        $returnsRows = $this->returnsRows($sql);
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         if ($returnsRows) {

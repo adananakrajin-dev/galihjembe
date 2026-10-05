@@ -1,27 +1,21 @@
 <?php
 /**
- * SESSIONS — Migrasi database (idempotent, aman dijalankan berulang).
+ * SESSIONS — Migrasi/verifikasi database (PostgreSQL, idempotent).
  *
  * Pakai:
  *   - CLI   : php database/migrate.php
+ *   - CLI   : php database/migrate.php --seed-admin
  *   - Local : buka http://localhost/bisnis/database/migrate.php
  *
  * Yang dilakukan:
  *   1. Menjalankan seluruh statement di database/schema.sql
- *      (CREATE TABLE IF NOT EXISTS + seed kategori & pengaturan)
- *   2. Menambahkan kolom baru pada tabel `users` & `listings` lama bila ada
- *      (users: name, email, phone, location, avatar, role, status, dll.)
- *      (listings: province, regency, district, rt, rw — cascade wilayah)
- *   2c. Kolom moderasi ulasan & laporan review
- *      (reviews: updated_at, reply, replied_at, reply_updated_at)
- *      (reports: listing_id nullable, review_id, unique anti-dobel, FK cascade)
- *   2d. Pengajuan seller wajib data verifikasi
- *      (seller_profiles: home_address — hanya tampil untuk admin)
- *   2e. Penataan aset: gambar QRIS pindah ke assets/img/
- *      (settings payment_qris diperbarui bila masih path lama)
- *   2f. Atribut terstruktur listing: subtipe kategori & merek
- *      (listings: subtype_id, brand_id + seed subtipe/merek)
- *   3. Membuat akun admin default bila belum ada (admin / admin123)
+ *      (CREATE TABLE IF NOT EXISTS + trigger + seed idempotent)
+ *   2. Verifikasi tabel & kolom inti, serta trigger pembarui timestamp
+ *   3. Membuat akun admin bila belum ada — HANYA dengan flag --seed-admin.
+ *      Password di-generate acak dan ditampilkan sekali, atau ambil dari env
+ *      SESSIONS_ADMIN_PASSWORD. Tidak ada password default yang bisa ditebak.
+ *
+ * Script ini tidak menghapus atau mengubah data yang sudah ada.
  */
 
 // ── Penjaga: hanya CLI atau akses lokal ──
@@ -35,12 +29,15 @@ if (PHP_SAPI !== 'cli') {
 
 require __DIR__ . '/../database.php';
 
-echo "=== SESSIONS DB Migrasi ===\n";
-echo "Database: " . ($database_name ?? '-') . "\n\n";
+$seedAdmin = in_array('--seed-admin', $argv ?? [], true);
 
-$ok = 0; $fail = 0; $skip = 0;
+echo "=== SESSIONS DB Migrasi (PostgreSQL) ===\n";
+echo "Database: {$database_name} @ {$db_host}\n\n";
+
+$ok = 0; $fail = 0;
 
 // ── 1. Jalankan schema.sql ──
+// Pemecah statement: hormati $$ ... $$ (body fungsi plpgsql) dan literal '...'.
 $sqlFile = __DIR__ . '/schema.sql';
 $sql = file_get_contents($sqlFile);
 if ($sql === false) {
@@ -48,353 +45,165 @@ if ($sql === false) {
     exit(1);
 }
 
-// Buang komentar baris (-- ...) lalu pecah per pernyataan
-$lines = array_filter(explode("\n", $sql), function ($l) {
-    return strpos(ltrim($l), '--') !== 0;
-});
-$statements = explode(';', implode("\n", $lines));
+function split_sql(string $sql): array
+{
+    $out = []; $cur = ''; $len = strlen($sql);
+    $i = 0; $inS = false; $inD = false; $dollar = null;
+    while ($i < $len) {
+        $ch = $sql[$i]; $next = $i + 1 < $len ? $sql[$i + 1] : '';
+        // tag dollar-quoted: $$ atau $nama$
+        if ($dollar === null && !$inS && !$inD && $ch === '$'
+            && preg_match('/\$[A-Za-z_0-9]*\$/', substr($sql, $i), $m)) {
+            $dollar = $m[0];
+            $cur .= $dollar; $i += strlen($dollar); continue;
+        }
+        if ($dollar !== null) {
+            if (substr($sql, $i, strlen($dollar)) === $dollar) {
+                $cur .= $dollar; $i += strlen($dollar); $dollar = null; continue;
+            }
+            $cur .= $ch; $i++; continue;
+        }
+        if (!$inD && $ch === "'") { $inS = !$inS; $cur .= $ch; $i++; continue; }
+        if (!$inS && $ch === '"') { $inD = !$inD; $cur .= $ch; $i++; continue; }
+        // komentar baris
+        if (!$inS && !$inD && $ch === '-' && $next === '-') {
+            while ($i < $len && $sql[$i] !== "\n") { $i++; }
+            continue;
+        }
+        if (!$inS && !$inD && $ch === ';') {
+            $t = trim($cur);
+            if ($t !== '') { $out[] = $t; }
+            $cur = ''; $i++; continue;
+        }
+        $cur .= $ch; $i++;
+    }
+    $t = trim($cur);
+    if ($t !== '') { $out[] = $t; }
+    return $out;
+}
+
+$statements = split_sql($sql);
 
 foreach ($statements as $i => $stmt) {
-    $stmt = trim($stmt);
-    if ($stmt === '') { $skip++; continue; }
     try {
         $db->query($stmt);
         $ok++;
     } catch (Throwable $e) {
-        // INSERT IGNORE / CREATE IF NOT EXISTS seharusnya tidak gagal;
-        // catat bila terjadi agar terlihat di laporan.
         $fail++;
-        echo "[SQL #" . ($i + 1) . "] GAGAL: " . substr($e->getMessage(), 0, 160) . "\n";
-        echo "         " . substr(preg_replace('/\s+/', ' ', $stmt), 0, 120) . "...\n";
+        echo "[SQL #" . ($i + 1) . "] GAGAL: " . substr($e->getMessage(), 0, 200) . "\n";
+        echo "         " . substr(preg_replace('/\s+/', ' ', $stmt), 0, 140) . "...\n";
     }
 }
 
-echo "Schema   : {$ok} pernyataan OK, {$fail} gagal, {$skip} kosong\n";
+echo "Schema   : {$ok} pernyataan OK, {$fail} gagal\n";
 
-// ── 2. Kolom tambahan untuk tabel users lama ──
-$wanted = [
-    'name'     => "ADD COLUMN `name` VARCHAR(100) NOT NULL DEFAULT '' AFTER `id`",
-    'email'    => "ADD COLUMN `email` VARCHAR(150) NULL AFTER `name`",
-    'phone'    => "ADD COLUMN `phone` VARCHAR(25) NULL AFTER `password`",
-    'location' => "ADD COLUMN `location` VARCHAR(100) NULL AFTER `phone`",
-    'avatar'   => "ADD COLUMN `avatar` VARCHAR(255) NULL AFTER `location`",
-    'role'     => "ADD COLUMN `role` ENUM('buyer','seller','admin') NOT NULL DEFAULT 'buyer' AFTER `avatar`",
-    'status'   => "ADD COLUMN `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `role`",
-    'created_at' => "ADD COLUMN `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `status`",
-    'updated_at' => "ADD COLUMN `updated_at` DATETIME NULL DEFAULT NULL AFTER `created_at`",
+// ── 2. Verifikasi tabel & kolom inti ──
+$expected = [
+    'users'            => ['id','name','username','password','email','role','status','created_at'],
+    'categories'       => ['id','name','slug','type'],
+    'listing_subtypes' => ['id','category_id','name','slug'],
+    'listing_brands'   => ['id','subtype_id','name','slug'],
+    'seller_profiles'  => ['id','user_id','store_name','approval','home_address'],
+    'briefs'           => ['id','buyer_id','seller_id','title','status'],
+    'listings'         => ['id','seller_id','title','price','condition','category_id','subtype_id','brand_id','moderation','status'],
+    'listing_images'   => ['id','listing_id','image_url','is_primary'],
+    'listing_packages' => ['id','listing_id','name','price'],
+    'orders'           => ['id','order_code','buyer_id','seller_id','total','status'],
+    'reviews'          => ['id','order_id','rating','reply','reply_updated_at'],
+    'favorites'        => ['id','user_id','listing_id'],
+    'reports'          => ['id','reporter_id','listing_id','review_id','reason','status'],
+    'settings'         => ['key','value'],
 ];
 
-$added = 0;
-try {
-    $res = $db->query("SHOW COLUMNS FROM users");
-    $existing = [];
-    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
-
-    foreach ($wanted as $col => $ddl) {
-        if (isset($existing[$col])) { continue; }
-        try {
-            $db->query("ALTER TABLE users " . $ddl);
-            $added++;
-            echo "users: kolom `{$col}` ditambahkan\n";
-        } catch (Throwable $e) {
-            echo "users: gagal menambah kolom `{$col}` — {$e->getMessage()}\n";
-            $fail++;
-        }
+$missing = 0;
+foreach ($expected as $table => $cols) {
+    $rows = $db->queryParams(
+        "SELECT column_name FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = ?",
+        [$table]
+    );
+    $have = array_column($rows->fetch_all(), 'column_name');
+    if (!$have) {
+        echo "[VERIFIKASI] tabel `{$table}` TIDAK ADA\n";
+        $missing++;
+        continue;
     }
-
-    // Unique email bila memungkinkan (gagal diabaikan bila ada duplikat)
-    if (!isset($existing['email'])) {
-        try {
-            $db->query('ALTER TABLE users ADD UNIQUE KEY uq_users_email (email)');
-        } catch (Throwable $e) { /* ada duplikat — biarkan, aplikasi tetap cek manual */ }
+    $gap = array_diff($cols, $have);
+    if ($gap) {
+        echo "[VERIFIKASI] tabel `{$table}` kurang kolom: " . implode(', ', $gap) . "\n";
+        $missing++;
     }
-} catch (Throwable $e) {
-    echo "Cek tabel users gagal: {$e->getMessage()}\n";
-    $fail++;
 }
 
-// ── 2b. Kolom cascade wilayah untuk tabel listings lama ──
-$listing_wanted = [
-    'province' => "ADD COLUMN `province` VARCHAR(100) NULL AFTER `location`",
-    'regency'  => "ADD COLUMN `regency` VARCHAR(100) NULL AFTER `province`",
-    'district' => "ADD COLUMN `district` VARCHAR(100) NULL AFTER `regency`",
-    'rt'       => "ADD COLUMN `rt` VARCHAR(10) NULL AFTER `district`",
-    'rw'       => "ADD COLUMN `rw` VARCHAR(10) NULL AFTER `rt`",
-];
-
-try {
-    $res = $db->query("SHOW COLUMNS FROM listings");
-    $existing = [];
-    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
-
-    foreach ($listing_wanted as $col => $ddl) {
-        if (isset($existing[$col])) { continue; }
-        try {
-            $db->query("ALTER TABLE listings " . $ddl);
-            $added++;
-            echo "listings: kolom `{$col}` ditambahkan\n";
-        } catch (Throwable $e) {
-            echo "listings: gagal menambah kolom `{$col}` — {$e->getMessage()}\n";
-            $fail++;
-        }
-    }
-} catch (Throwable $e) {
-    echo "Cek tabel listings gagal: {$e->getMessage()}\n";
-    $fail++;
+if ($missing === 0) {
+    echo "Verifikasi: semua " . count($expected) . " tabel & kolom inti lengkap.\n";
+} else {
+    echo "Verifikasi: {$missing} tabel/kolom bermasalah.\n";
+    $fail += $missing;
 }
 
-// ── 2c. Kolom moderasi ulasan & dukungan laporan review ──
-$review_wanted = [
-    'updated_at'       => "ADD COLUMN `updated_at` DATETIME NULL AFTER `created_at`",
-    'reply'            => "ADD COLUMN `reply` TEXT NULL AFTER `updated_at`",
-    'replied_at'       => "ADD COLUMN `replied_at` DATETIME NULL AFTER `reply`",
-    'reply_updated_at' => "ADD COLUMN `reply_updated_at` DATETIME NULL AFTER `replied_at`",
-];
-
-try {
-    $res = $db->query("SHOW COLUMNS FROM reviews");
-    $existing = [];
-    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
-
-    foreach ($review_wanted as $col => $ddl) {
-        if (isset($existing[$col])) { continue; }
-        try {
-            $db->query("ALTER TABLE reviews " . $ddl);
-            $added++;
-            echo "reviews: kolom `{$col}` ditambahkan\n";
-        } catch (Throwable $e) {
-            echo "reviews: gagal menambah kolom `{$col}` — {$e->getMessage()}\n";
-            $fail++;
-        }
-    }
-} catch (Throwable $e) {
-    echo "Cek tabel reviews gagal: {$e->getMessage()}\n";
-    $fail++;
+// ── 3. Trigger pembarui timestamp ──
+$trig = 0;
+foreach (['listings', 'orders', 'seller_profiles', 'briefs'] as $t) {
+    $n = $db->queryParams(
+        "SELECT COUNT(*) AS c FROM pg_trigger
+         WHERE tgrelid = to_regclass(?) AND NOT tgisinternal",
+        ['public.' . $t]
+    )->fetch_column();
+    if ((int)$n > 0) { $trig++; } else { echo "[TRIGGER] {$t}: pemicu updated_at belum ada\n"; }
 }
+echo "Trigger   : {$trig}/4 tabel terpasang.\n";
 
-// Laporan: dukung target ulasan (review_id) selain listing
-try {
-    $res = $db->query("SHOW COLUMNS FROM reports");
-    $rrows = [];
-    while ($row = $res->fetch_assoc()) { $rrows[$row['Field']] = $row; }
+// ── 4. Seed admin (hanya bila diminta) ──
+$existing = $db->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1")->fetch_column();
 
-    if (isset($rrows['listing_id']) && ($rrows['listing_id']['Null'] ?? 'YES') !== 'YES') {
-        try {
-            $db->query("ALTER TABLE reports MODIFY COLUMN `listing_id` INT NULL");
-            $added++;
-            echo "reports: listing_id dibuat nullable (dukung laporan ulasan)\n";
-        } catch (Throwable $e) {
-            echo "reports: gagal membuat listing_id nullable — {$e->getMessage()}\n";
-            $fail++;
+if ($existing) {
+    echo "Admin     : sudah ada (id={$existing}).\n";
+} elseif (!$seedAdmin) {
+    echo "Admin     : belum ada. Jalankan 'php database/migrate.php --seed-admin' bila dibutuhkan.\n";
+} else {
+    $password = getenv('SESSIONS_ADMIN_PASSWORD') ?: null;
+    $generated = false;
+    if ($password === false || $password === null || $password === '') {
+        $alphabet = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $password = '';
+        for ($i = 0; $i < 20; $i++) {
+            $password .= $alphabet[random_int(0, strlen($alphabet) - 1)];
         }
-    }
-    if (!isset($rrows['review_id'])) {
-        try {
-            $db->query("ALTER TABLE reports ADD COLUMN `review_id` INT NULL AFTER `listing_id`");
-            $added++;
-            echo "reports: kolom `review_id` ditambahkan\n";
-        } catch (Throwable $e) {
-            echo "reports: gagal menambah kolom `review_id` — {$e->getMessage()}\n";
-            $fail++;
-        }
-    }
-} catch (Throwable $e) {
-    echo "Cek tabel reports gagal: {$e->getMessage()}\n";
-    $fail++;
-}
-
-// Indeks unik anti-dobel laporan review + FK (sudah ada → biarkan)
-try {
-    $db->query("ALTER TABLE reports ADD UNIQUE KEY uq_report_review (reporter_id, review_id)");
-    $added++;
-    echo "reports: unique uq_report_review ditambahkan\n";
-} catch (Throwable $e) { /* sudah ada — biarkan */ }
-try {
-    $db->query("ALTER TABLE reports ADD CONSTRAINT fk_report_review FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE");
-    $added++;
-    echo "reports: FK fk_report_review ditambahkan\n";
-} catch (Throwable $e) { /* sudah ada — biarkan */ }
-
-// ── 2d. Data verifikasi pengajuan seller (alamat rumah — khusus admin) ──
-try {
-    $res = $db->query("SHOW COLUMNS FROM seller_profiles");
-    $existing = [];
-    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
-
-    if (!isset($existing['home_address'])) {
-        try {
-            $db->query("ALTER TABLE seller_profiles ADD COLUMN `home_address` TEXT NULL AFTER `payout_info`");
-            $added++;
-            echo "seller_profiles: kolom `home_address` ditambahkan\n";
-        } catch (Throwable $e) {
-            echo "seller_profiles: gagal menambah kolom `home_address` — {$e->getMessage()}\n";
-            $fail++;
-        }
-    }
-} catch (Throwable $e) {
-    echo "Cek tabel seller_profiles gagal: {$e->getMessage()}\n";
-    $fail++;
-}
-
-// ── 2e. Penataan aset: gambar QRIS pindah ke assets/img/ ──
-try {
-    $res = $db->query("SELECT `value` FROM settings WHERE `key` = 'payment_qris' LIMIT 1");
-    $qris = $res ? $res->fetch_assoc() : null;
-    if ($qris !== null && $qris['value'] === 'qr.jpeg') {
-        $stmt = $db->prepare("UPDATE settings SET `value` = 'assets/img/qr.jpeg' WHERE `key` = 'payment_qris'");
-        $stmt->execute();
-        $stmt->close();
-        $added++;
-        echo "settings: payment_qris diperbarui ke assets/img/qr.jpeg\n";
-    }
-} catch (Throwable $e) {
-    echo "settings: gagal memperbarui payment_qris — {$e->getMessage()}\n";
-    $fail++;
-}
-
-// ── 2f. Atribut terstruktur listing: subtipe kategori & merek ──
-$attr_wanted = [
-    'subtype_id' => "ADD COLUMN `subtype_id` INT NULL AFTER `category_id`",
-    'brand_id'   => "ADD COLUMN `brand_id` INT NULL AFTER `subtype_id`",
-];
-
-try {
-    $res = $db->query("SHOW COLUMNS FROM listings");
-    $existing = [];
-    while ($row = $res->fetch_assoc()) { $existing[$row['Field']] = true; }
-
-    foreach ($attr_wanted as $col => $ddl) {
-        if (isset($existing[$col])) { continue; }
-        try {
-            $db->query("ALTER TABLE listings " . $ddl);
-            $added++;
-            echo "listings: kolom `{$col}` ditambahkan\n";
-        } catch (Throwable $e) {
-            echo "listings: gagal menambah kolom `{$col}` — {$e->getMessage()}\n";
-            $fail++;
-        }
-    }
-} catch (Throwable $e) {
-    echo "Cek tabel listings (atribut) gagal: {$e->getMessage()}\n";
-    $fail++;
-}
-
-// Indeks & FK atribut (sudah ada → biarkan)
-foreach ([
-    'ALTER TABLE listings ADD KEY idx_listing_subtype (subtype_id)',
-    'ALTER TABLE listings ADD KEY idx_listing_brand (brand_id)',
-    'ALTER TABLE listings ADD CONSTRAINT fk_listing_subtype FOREIGN KEY (subtype_id) REFERENCES listing_subtypes(id) ON DELETE SET NULL',
-    'ALTER TABLE listings ADD CONSTRAINT fk_listing_brand FOREIGN KEY (brand_id) REFERENCES listing_brands(id) ON DELETE SET NULL',
-] as $attr_ddl) {
-    try { $db->query($attr_ddl); } catch (Throwable $e) { /* sudah ada — biarkan */ }
-}
-
-// Seed subtipe & merek per kategori (INSERT IGNORE — aman diulang)
-$subtype_seed = [
-    'kendaraan'  => ['Sepeda', 'Motor', 'Mobil', 'Bajaj', 'Pesawat', 'Kapal'],
-    'elektronik' => ['Handphone', 'Laptop', 'Kamera', 'Televisi', 'Audio'],
-    'buku'       => ['Novel', 'Komik', 'Buku Pelajaran', 'Majalah'],
-    'furnitur'   => ['Meja', 'Kursi', 'Lemari', 'Kasur'],
-];
-$brand_seed = [
-    'kendaraan|Sepeda'     => ['Polygon', 'United', 'Wim Cycle', 'Federal'],
-    'kendaraan|Motor'      => ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki'],
-    'kendaraan|Mobil'      => ['Toyota', 'Daihatsu', 'Mitsubishi', 'Honda', 'Suzuki', 'Hyundai'],
-    'elektronik|Handphone' => ['Samsung', 'Apple', 'Xiaomi', 'Oppo', 'Vivo'],
-    'elektronik|Laptop'    => ['Asus', 'Acer', 'Lenovo', 'Apple', 'HP'],
-    'elektronik|Kamera'    => ['Canon', 'Nikon', 'Sony', 'Fujifilm'],
-    'elektronik|Televisi'  => ['Samsung', 'LG', 'Sony', 'TCL'],
-    'elektronik|Audio'     => ['Sony', 'JBL', 'Sennheiser'],
-];
-
-$attr_slug = function (string $s): string {
-    $s = strtolower(trim($s));
-    $s = str_replace([' ', '/'], ['-', '-'], $s);
-    return preg_replace('/[^a-z0-9\-]/', '', $s);
-};
-
-$seeded_sub = 0; $seeded_brand = 0;
-try {
-    foreach ($subtype_seed as $cat_slug => $names) {
-        $stmt = $db->prepare('SELECT id FROM categories WHERE slug = ?');
-        $stmt->bind_param('s', $cat_slug);
-        $stmt->execute();
-        $cat = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        if (!$cat) { continue; }
-
-        foreach ($names as $name) {
-            $slug = $attr_slug($name);
-            $stmt = $db->prepare('INSERT IGNORE INTO listing_subtypes (category_id, name, slug) VALUES (?, ?, ?)');
-            $stmt->bind_param('iss', $cat['id'], $name, $slug);
-            $stmt->execute();
-            if ($stmt->affected_rows > 0) { $seeded_sub++; }
-            $stmt->close();
-        }
+        $generated = true;
     }
 
-    foreach ($brand_seed as $key => $names) {
-        list($cat_slug, $sub_name) = explode('|', $key, 2);
-        $stmt = $db->prepare(
-            'SELECT s.id FROM listing_subtypes s
-             JOIN categories c ON c.id = s.category_id
-             WHERE c.slug = ? AND s.name = ?'
-        );
-        $stmt->bind_param('ss', $cat_slug, $sub_name);
-        $stmt->execute();
-        $sub = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        if (!$sub) { continue; }
-
-        foreach ($names as $name) {
-            $slug = $attr_slug($name);
-            $stmt = $db->prepare('INSERT IGNORE INTO listing_brands (subtype_id, name, slug) VALUES (?, ?, ?)');
-            $stmt->bind_param('iss', $sub['id'], $name, $slug);
-            $stmt->execute();
-            if ($stmt->affected_rows > 0) { $seeded_brand++; }
-            $stmt->close();
-        }
+    $username = 'admin';
+    $suffix = 1;
+    while ($db->queryParams('SELECT id FROM users WHERE username = ?', [$username])->fetch_column()) {
+        $username = 'admin' . (++$suffix);
     }
 
-    if ($seeded_sub || $seeded_brand) {
-        $added += $seeded_sub + $seeded_brand;
-        echo "atribut: +{$seeded_sub} subtipe, +{$seeded_brand} merek (seed)\n";
+    $email = 'admin@sessions.local';
+    $stmt = $db->prepare(
+        'INSERT INTO users (name, username, password, email, role, status)
+         VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $stmt->bind_param('sssss', 'Administrator', $username, $hash, $email, 'admin', 'active');
+    $stmt->execute();
+
+    echo "\n=== Akun admin dibuat ===\n";
+    echo "username: {$username}\n";
+    echo "email   : {$email}\n";
+    if ($generated) {
+        echo "password: {$password}   <- tampil SEKALI, simpan sekarang\n";
     } else {
-        echo "atribut: subtipe & merek sudah lengkap.\n";
+        echo "password: (dari SESSIONS_ADMIN_PASSWORD)\n";
     }
-} catch (Throwable $e) {
-    echo "atribut: gagal seed subtipe/merek — {$e->getMessage()}\n";
-    $fail++;
+    echo "Ganti password setelah login.\n";
 }
 
-// ── 3. Akun admin default ──
-try {
-    $res = $db->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
-    if ($res && $res->num_rows === 0) {
-        $hash = password_hash('admin123', PASSWORD_DEFAULT);
-        $stmt = $db->prepare(
-            "INSERT INTO users (name, email, username, password, role, status)
-             VALUES ('Administrator', 'admin@sessions.local', 'admin', ?, 'admin', 'active')"
-        );
-        $stmt->bind_param('s', $hash);
-        $stmt->execute();
-        $stmt->close();
-        echo "\nAkun admin dibuat → username: admin | password: admin123 (GANTI setelah masuk!)\n";
-    } else {
-        echo "Akun admin sudah ada.\n";
-    }
-} catch (Throwable $e) {
-    echo "Gagal membuat admin: {$e->getMessage()}\n";
-    $fail++;
-}
-
-// ── Laporan akhir ──
 echo "\n=== Selesai ===\n";
 echo ($fail === 0)
     ? "Semua langkah berhasil.\n"
     : "{$fail} langkah bermasalah (lihat pesan di atas).\n";
 
-// Bukan CLI → tutup dengan tampilan sederhana
 if (PHP_SAPI !== 'cli') {
-    echo "\n<a href=\"../index.php\">← Kembali ke beranda</a>";
+    echo "\n<a href=\"../index.php\">\xE2\x86\x90 Kembali ke beranda</a>";
 }
