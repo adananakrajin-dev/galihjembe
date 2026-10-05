@@ -79,10 +79,21 @@ class DbStatement
         $this->stmt = $pdo->prepare($sql);
     }
 
-    /** mysqli: bind_param(string $types, mixed &...$vars). Nilai dibiarkan tipe aslinya. */
+    /**
+     * mysqli: bind_param(string $types, mixed &...$vars).
+     *
+     * Huruf pada $types dianggap sebagai mysqli: i=integer, d=double, s=string,
+     * b=blob TIDAK dipetakan ke boolean. Postgres butuh true/false untuk kolom
+     * boolean; PHP false|string('') akan ditolak ("invalid input syntax for
+     * type boolean"). Karena itu nilai bool dipaksa ke bool PDO.
+     */
     public function bind_param(string $types, &...$vars): bool
     {
-        $this->params = array_values($vars);
+        $this->params = [];
+        foreach (array_values($vars) as $i => $v) {
+            if (is_bool($v)) { $v = $v ? 'true' : 'false'; }
+            $this->params[] = $v;
+        }
         return true;
     }
 

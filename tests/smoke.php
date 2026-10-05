@@ -8,7 +8,7 @@ $GLOBALS['__pass']  = 0;
 
 function ok(string $name, bool $cond, string $extra = ''): void {
     if ($cond) { $GLOBALS['__pass']++; echo "  PASS  $name\n"; }
-    else       { $GLOBALS['__fail']++; echo "  FAIL  $name $extra\n"; }
+    else       { $GLOBALS['__fails']++; echo "  FAIL  $name $extra\n"; }
 }
 function section(string $t): void { echo "\n== $t ==\n"; }
 
@@ -58,6 +58,34 @@ ok('insert_id numeric > 0', $newId > 0, '(got ' . $newId . ')');
 $db->rollBack();
 ok('rollBack tidak meninggalkan baris',
    (int)$db->query("SELECT COUNT(*) FROM reports WHERE reason = '__smoke__'")->fetch_row()[0] === 0);
+
+// -- 2b. Boolean binding (regresi: PHP false ditolak Postgres) ---------
+section('Boolean binding');
+$db->beginTransaction();
+try {
+    foreach ([true, false] as $flag) {
+        $st = $db->prepare('INSERT INTO listing_images (listing_id, image_url, is_primary)
+                            SELECT id, ?, ? FROM listings LIMIT 1');
+        $url = 'ZZ_smoke_' . ($flag ? 'T' : 'F') . '.png';
+        $st->bind_param('sb', $url, $flag);
+        $st->execute();
+        $row = $db->queryParams(
+            'SELECT is_primary, pg_typeof(is_primary) AS t FROM listing_images WHERE id = ?',
+            [$st->insert_id]
+        )->fetch_assoc();
+        ok('bind ' . var_export($flag, true) . ' -> boolean',
+            $row && $row['is_primary'] === $flag && $row['t'] === 'boolean',
+            '(' . ($row['t'] ?? '?') . ')');
+    }
+    $n = $db->query('SELECT COUNT(*) AS c FROM listing_images WHERE is_primary = true')->fetch_column();
+    ok('filter is_primary = true jalan', (int)$n >= 0, "({$n} baris)");
+} catch (Throwable $e) {
+    ok('boolean binding', false, '(' . substr($e->getMessage(), 0, 60) . ')');
+} finally {
+    $db->rollBack();
+}
+$left = $db->query("SELECT COUNT(*) AS c FROM listing_images WHERE image_url LIKE 'ZZ_smoke%'")->fetch_column();
+ok('tidak ada sisa baris boolean', (int)$left === 0);
 
 // -- 3. SQL portability --------------------------------------------
 section('SQL portability');
