@@ -134,7 +134,7 @@ if (isset($_POST['buat_order'])) {
         $stmt = $db->prepare(
             'INSERT INTO orders (order_code, buyer_id, seller_id, listing_id, package_id, brief_id,
                                  title, total, shipping_address, notes, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "menunggu_bukti")'
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \'menunggu_bukti\')'
         );
         $stmt->bind_param(
             'siiiiisdss',   // s code, i buyer, i seller, i listing, i package, i brief, s title, d total, s address, s notes
@@ -148,7 +148,7 @@ if (isset($_POST['buat_order'])) {
             $stmt->close();
 
             if ($brief) {
-                $stmt = $db->prepare('UPDATE briefs SET status = "accepted" WHERE id = ?');
+                $stmt = $db->prepare('UPDATE briefs SET status = \'accepted\' WHERE id = ?');
                 $stmt->bind_param('i', $brief_id);
                 $stmt->execute();
                 $stmt->close();

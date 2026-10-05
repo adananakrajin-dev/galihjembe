@@ -23,7 +23,7 @@ if (isset($_POST['aksi'])) {
 
         // Role user mengikuti status approval
         $role = $act === 'approve' ? 'seller' : 'buyer';
-        $stmt = $db->prepare('UPDATE users SET role = ? WHERE id = ? AND role <> "admin"');
+        $stmt = $db->prepare('UPDATE users SET role = ? WHERE id = ? AND role <> \'admin\'');
         $stmt->bind_param('si', $role, $p['user_id']);
         $stmt->execute();
         $stmt->close();

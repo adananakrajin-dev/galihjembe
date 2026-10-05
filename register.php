@@ -35,7 +35,7 @@ if (isset($_POST['submit_register'])) {
         $dup = db_one(
             $db,
             'SELECT id,
-                    CASE WHEN email = ? THEN "email" ELSE "username" END AS jenis
+                    CASE WHEN email = ? THEN \'email\' ELSE \'username\' END AS jenis
              FROM users WHERE email = ? OR username = ? LIMIT 1',
             'sss', $email, $email, $username
         );
@@ -48,7 +48,7 @@ if (isset($_POST['submit_register'])) {
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $db->prepare(
                 'INSERT INTO users (name, email, username, phone, password, role, status)
-                 VALUES (?, ?, ?, ?, ?, "buyer", "active")'
+                 VALUES (?, ?, ?, ?, ?, \'buyer\', \'active\')'
             );
             $stmt->bind_param('sssss', $name, $email, $username, $phone, $hash);
 

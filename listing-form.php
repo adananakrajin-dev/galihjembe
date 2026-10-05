@@ -195,7 +195,7 @@ if (isset($_POST['simpan'])) {
             $stmt = $db->prepare(
                 'UPDATE listings SET type=?, title=?, description=?, price=?, category_id=?,
                         subtype_id=?, brand_id=?,
-                        `condition`=?, location=?, website=?, stack=?, moderation=?,
+                        condition=?, location=?, website=?, stack=?, moderation=?,
                         province=?, regency=?, district=?, rt=?, rw=?
                  WHERE id=? AND seller_id=?'
             );
@@ -213,9 +213,9 @@ if (isset($_POST['simpan'])) {
         } else {
             $stmt = $db->prepare(
                 'INSERT INTO listings (seller_id, category_id, subtype_id, brand_id, type, title, description, price,
-                                       `condition`, location, website, stack, moderation,
+                                       condition, location, website, stack, moderation,
                                        province, regency, district, rt, rw)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "pending", ?, ?, ?, ?, ?)'
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \'pending\', ?, ?, ?, ?, ?)'
             );
             $stmt->bind_param(
                 'iiii' . 'sss' . 'd' . str_repeat('s', 9),

@@ -38,7 +38,7 @@ $pay = [
     ],
 ];
 try {
-    foreach (db_all($db, 'SELECT `key`, `value` FROM settings') as $s) {
+    foreach (db_all($db, 'SELECT key, value FROM settings') as $s) {
         $k = $s['key'];
         if ($k === 'payment_wa')           { $pay['wa'] = $s['value']; }
         if ($k === 'payment_qris')         { $pay['qris'] = $s['value']; }

@@ -78,7 +78,7 @@ if (isset($_POST['ajukan'])) {
 
                 $stmt = $db->prepare(
                     'INSERT INTO seller_profiles (user_id, store_name, store_desc, payout_info, home_address, approval)
-                     VALUES (?, ?, ?, ?, ?, "pending")'
+                     VALUES (?, ?, ?, ?, ?, \'pending\')'
                 );
                 $stmt->bind_param('issss', $user_id, $store_name, $store_desc, $payout_info, $home_addr);
                 if ($stmt->execute()) {

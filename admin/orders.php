@@ -16,7 +16,7 @@ if (isset($_POST['aksi'])) {
         if (empty($o['payment_proof'])) {
             set_flash('Belum ada bukti pembayaran untuk diverifikasi.', 'danger');
         } else {
-            $stmt = $db->prepare('UPDATE orders SET status = "diverifikasi" WHERE id = ?');
+            $stmt = $db->prepare('UPDATE orders SET status = \'diverifikasi\' WHERE id = ?');
             $stmt->bind_param('i', $oid);
             $stmt->execute();
             $stmt->close();
@@ -31,7 +31,7 @@ if (isset($_POST['aksi'])) {
         $stmt->close();
         set_flash('Bukti ditolak — pembeli diminta upload ulang.', 'info');
     } elseif ($act === 'batal') {
-        $stmt = $db->prepare('UPDATE orders SET status = "batal" WHERE id = ? AND status <> "selesai"');
+        $stmt = $db->prepare('UPDATE orders SET status = \'batal\' WHERE id = ? AND status <> \'selesai\'');
         $stmt->bind_param('i', $oid);
         $stmt->execute();
         $stmt->close();

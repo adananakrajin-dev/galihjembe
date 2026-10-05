@@ -97,7 +97,7 @@ $from = "FROM listings l
          LEFT JOIN categories c    ON c.id = l.category_id
          LEFT JOIN users u         ON u.id = l.seller_id
          LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id AND sp.approval = 'approved'
-         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1
+         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = true
          LEFT JOIN listing_subtypes st ON st.id = l.subtype_id
          LEFT JOIN listing_brands br   ON br.id = l.brand_id
          WHERE " . $where_sql;

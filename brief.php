@@ -51,7 +51,7 @@ if (isset($_POST['buat_brief'])) {
 if (isset($_POST['tolak'])) {
     csrf_check();
     $bid = (int)($_POST['brief_id'] ?? 0);
-    $stmt = $db->prepare('UPDATE briefs SET status = "rejected" WHERE id = ? AND buyer_id = ? AND status = "quoted"');
+    $stmt = $db->prepare('UPDATE briefs SET status = \'rejected\' WHERE id = ? AND buyer_id = ? AND status = \'quoted\'');
     $stmt->bind_param('ii', $bid, $user_id);
     $stmt->execute();
     $stmt->close();
@@ -69,8 +69,8 @@ if ($target_seller > 0) {
             $db,
             'SELECT COALESCE(sp.store_name, u.username) AS name
              FROM users u LEFT JOIN seller_profiles sp ON sp.user_id = u.id
-             WHERE u.id = ? AND (sp.approval = "approved" OR sp.user_id IS NULL)',
-            'i', $target_seller
+             WHERE u.id = ? AND (sp.approval = \'approved\' OR sp.user_id IS NULL)',
+                         'i', $target_seller
         );
         $target_name = $t['name'] ?? '';
         if ($target_name === '') { $target_seller = 0; }

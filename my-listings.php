@@ -53,10 +53,10 @@ try {
         $db,
         'SELECT l.id, l.title, l.price, l.type, l.status, l.moderation, l.created_at,
                 c.name AS category_name, img.image_url AS image,
-                (SELECT COUNT(*) FROM orders o WHERE o.listing_id = l.id AND o.status <> "batal") AS order_count
+                (SELECT COUNT(*) FROM orders o WHERE o.listing_id = l.id AND o.status <> \'batal\') AS order_count
          FROM listings l
          LEFT JOIN categories c ON c.id = l.category_id
-         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1
+         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = true
          WHERE l.seller_id = ?
          ORDER BY l.created_at DESC',
         'i', $seller_id

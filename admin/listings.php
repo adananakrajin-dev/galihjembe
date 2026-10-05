@@ -31,7 +31,7 @@ try {
             JOIN users u ON u.id = l.seller_id
             LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id
             LEFT JOIN categories c ON c.id = l.category_id
-            LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1';
+            LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = true';
     if (in_array($filter, $allowed, true) && $filter !== 'all') {
         $items = db_all($db, $sql . ' WHERE l.moderation = ? ORDER BY l.created_at DESC', 's', $filter);
     } else {

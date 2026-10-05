@@ -34,7 +34,7 @@ try {
          LEFT JOIN listing_brands br ON br.id = l.brand_id
          LEFT JOIN users u ON u.id = l.seller_id
          LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id
-         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1
+         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = true
          WHERE f.user_id = ?
          ORDER BY f.created_at DESC',
         'i', $user_id

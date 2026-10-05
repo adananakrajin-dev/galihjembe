@@ -53,7 +53,7 @@ if (isset($_POST['kirim_penawaran'])) {
 
     $b = db_one(
         $db,
-        'SELECT * FROM briefs WHERE id = ? AND status = "pending" AND (seller_id IS NULL OR seller_id = ?)',
+        'SELECT * FROM briefs WHERE id = ? AND status = \'pending\' AND (seller_id IS NULL OR seller_id = ?)',
         'ii', $bid, $seller_id
     );
 
@@ -62,7 +62,7 @@ if (isset($_POST['kirim_penawaran'])) {
     } elseif ($quote <= 0) {
         set_flash('Masukkan harga penawaran yang valid.', 'danger');
     } else {
-        $stmt = $db->prepare('UPDATE briefs SET seller_id = ?, quote_price = ?, status = "quoted" WHERE id = ?');
+        $stmt = $db->prepare('UPDATE briefs SET seller_id = ?, quote_price = ?, status = \'quoted\' WHERE id = ?');
         $stmt->bind_param('idi', $seller_id, $quote, $bid);
         $stmt->execute();
         $stmt->close();
@@ -93,7 +93,7 @@ try {
         'SELECT b.*, ub.name AS buyer_name, ub.username AS buyer_username
          FROM briefs b JOIN users ub ON ub.id = b.buyer_id
          WHERE (b.seller_id = ? OR b.seller_id IS NULL)
-           AND b.status <> "accepted"
+           AND b.status <> \'accepted\'
          ORDER BY CASE b.status WHEN \'pending\' THEN 0 WHEN \'quoted\' THEN 1 ELSE 2 END, b.created_at DESC',
         'i', $seller_id
     );

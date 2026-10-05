@@ -22,8 +22,8 @@ try {
          LEFT JOIN listing_brands br ON br.id = l.brand_id
          LEFT JOIN users u ON u.id = l.seller_id
          LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id
-         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1
-         WHERE l.moderation = "approved" AND l.status <> "inactive" AND l.type = "service"
+         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = true
+         WHERE l.moderation = \'approved\' AND l.status <> \'inactive\' AND l.type = \'service\'
          ORDER BY l.created_at DESC LIMIT 4'
     );
     $featured_products = db_all(
@@ -38,8 +38,8 @@ try {
          LEFT JOIN listing_brands br ON br.id = l.brand_id
          LEFT JOIN users u ON u.id = l.seller_id
          LEFT JOIN seller_profiles sp ON sp.user_id = l.seller_id
-         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = 1
-         WHERE l.moderation = "approved" AND l.status <> "inactive" AND l.type = "product"
+         LEFT JOIN listing_images img ON img.listing_id = l.id AND img.is_primary = true
+         WHERE l.moderation = \'approved\' AND l.status <> \'inactive\' AND l.type = \'product\'
          ORDER BY l.created_at DESC LIMIT 4'
     );
     $categories = db_all($db, 'SELECT name, slug FROM categories ORDER BY id LIMIT 8');
